@@ -4,7 +4,8 @@ from services.api_client import get_contracts_summary
 from excel_export import contracts_to_excel
 from keyboards import contracts_filter_keyboard, contracts_pagination_keyboard, contracts_type_menu, farmers_menu
 from middlewares.access import access_required
-from services.pagination import build_page_text, paginate_data
+from services.pagination import paginate_data
+from services.table_image import build_table_image, send_or_edit_table_image
 
 router = Router()
 PER_PAGE = 25
@@ -79,27 +80,25 @@ async def send_page(target, page, district_index, contract_type, edit):
     district_title = "Ҳаммаси" if district == "all" else district
     type_title = CONTRACT_TYPE_LABELS.get(contract_type, "Ҳаммаси")
 
-    text = build_page_text(
-        title=f"📑 Шартномалар ({type_title}): {district_title}",
-        headers=f"{'№':<3} {'Фермер номи':<14} {'миқдор':>7} {'Сумма':>7}",
-        subheaders=f"{' ':<3} {'   ':<14} {'  (тн)':>4} {'   (млн)':>9}",
-        rows=[
-            (
-                f"{index:<3} "
-                f"{contract['name'][:14]:<14} "
-                f"{float(contract['quantity']) / 1_000:>7,.1f}"
-                f"{float(contract['amount']) / 1_000_000:>9,.1f}"
-            )
-            for index, contract in enumerate(page_data, start=start + 1)
-        ],
+    rows = [
+        [
+            str(index),
+            contract["name"][:24],
+            f"{float(contract['quantity']) / 1_000:,.1f}",
+            f"{float(contract['amount']) / 1_000_000:,.1f}",
+        ]
+        for index, contract in enumerate(page_data, start=start + 1)
+    ]
+
+    image_bytes = build_table_image(
+        title="📑 Шартномалар",
+        subtitle=f"Тури: {type_title} | Туман: {district_title}",
+        columns=["№", "Фермер номи", "Миқдор (тн)", "Сумма (млн)"],
+        rows=rows,
     )
 
     keyboard = contracts_pagination_keyboard(page, end < len(filtered_data), district_index, contract_type)
-
-    if edit:
-        await target.edit_text(f"<pre>{text}</pre>", parse_mode="HTML", reply_markup=keyboard)
-    else:
-        await target.answer(f"<pre>{text}</pre>", parse_mode="HTML", reply_markup=keyboard)
+    await send_or_edit_table_image(target, image_bytes, keyboard, edit)
 
 
 @router.callback_query(F.data.startswith("contracts_export_excel:"))

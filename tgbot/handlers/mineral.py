@@ -12,6 +12,7 @@ from keyboards import (
     warehouse_products_inline_keyboard,
 )
 from middlewares.access import access_required
+from services.table_image import build_table_image, send_or_edit_table_image
 from services.api_client import (
     get_warehouse_expense_districts,
     get_warehouse_movements,
@@ -398,57 +399,72 @@ async def _send_warehouse_movements_page(
     end = start + PER_PAGE
     page_items = movements[start:end]
 
-    lines = [
-        f"🏬 {warehouse_name}",
-        f"📦 {product_name}",
-        "",
-        f"📥 Кирим: {float(totals.get('total_in', 0)):.2f}",
-        f"📤 Чиқим: {float(totals.get('total_out', 0)):.2f}",
-        f"🧮 Қолдиқ: {float(totals.get('balance', 0)):.2f}",
-        "",
-    ]
+    subtitle = (
+        f"🏬 {warehouse_name} | 📦 {product_name}\n"
+        f"📥 Кирим: {float(totals.get('total_in', 0)):.2f} | "
+        f"📤 Чиқим: {float(totals.get('total_out', 0)):.2f} | "
+        f"🧮 Қолдиқ: {float(totals.get('balance', 0)):.2f}"
+    )
+
+    footer_lines = None
+    report_rows: list[dict] = []
+    expense_rows: list[dict] = []
 
     if movement == "in":
-        lines.append("📥 Кирим деталлари:")
-        lines.append(f"{'Сана':<12} {'Юк-№':<4} {'Қоп':>4} {'Миқдори':>8}")
-        lines.append("-" * 38)
-        for item in page_items:
-            date_text = _format_date_ddmmyyyy(item.get("date"))
-            invoice_number = str(item.get("invoice_number") or "-")
-            bag_count = f"{int(item.get('bag_count') or 0)}"
-            quantity = f"{float(item.get('quantity') or 0):.0f}"
-            lines.append(f"{date_text:<12} {invoice_number:<4} {bag_count:>4} {quantity:>8}")
+        table_title = "📥 Кирим деталлари"
+        columns = ["Сана", "Юк-№", "Қоп", "Миқдори"]
+        rows = [
+            [
+                _format_date_ddmmyyyy(item.get("date")),
+                str(item.get("invoice_number") or "-"),
+                f"{int(item.get('bag_count') or 0)}",
+                f"{float(item.get('quantity') or 0):.0f}",
+            ]
+            for item in page_items
+        ]
     elif movement == "out":
         expense_rows = _expense_rows_by_farmer(movements)
         page_items = expense_rows[start:end]
-        lines.append("📤 Чиқим деталлари:")
-        lines.append(f"{'№':<3} {'Фермер номи':<16} {'Миқдори':>8} {'Га/кг':>6}")
-        lines.append("-" * 37)
-        for index, item in enumerate(page_items, start=start + 1):
-            farmer_name = (item.get("farmer_name") or "-")[:16]
-            quantity = f"{float(item.get('quantity') or 0):.0f}"
-            per_area = f"{float(item.get('quantity_per_area') or 0):.0f}"
-            lines.append(f"{index:<3} {farmer_name:<16} {quantity:>8} {per_area:>6}")
+        table_title = "📤 Чиқим деталлари"
+        columns = ["№", "Фермер номи", "Миқдори", "Га/кг"]
+        rows = [
+            [
+                str(index),
+                (item.get("farmer_name") or "-")[:24],
+                f"{float(item.get('quantity') or 0):.0f}",
+                f"{float(item.get('quantity_per_area') or 0):.0f}",
+            ]
+            for index, item in enumerate(page_items, start=start + 1)
+        ]
     else:
         report_rows = _report_rows_by_district(movements)
         page_items = report_rows[start:end]
         total_today_quantity = sum(float(item.get("today_quantity") or 0) for item in report_rows)
         total_quantity = sum(float(item.get("total_quantity") or 0) for item in report_rows)
-        lines.append("📊 Свод деталлари:")
-        today_title = date.today().strftime("%d.%m.%Y")
-        lines.append(f"{'№':<3} {'Туман':<10} {'Бир кунда':>8} {'Мавсумда':>10}")
-        lines.append(f"{'':<14} { today_title  :>10}")
-        lines.append("-" * 38)
-        for index, item in enumerate(page_items, start=start + 1):
-            district_name = (item.get("district_name") or "-")[:16]
-            today_quantity = f"{float(item.get('today_quantity') or 0):.0f}"
-            district_total_quantity = f"{float(item.get('total_quantity') or 0):.0f}"
-            lines.append(f"{index:<3} {district_name:<10} {today_quantity:>8} {district_total_quantity:>12}")
 
-        lines.append("-" * 38)
-        lines.append(f"{'':<3} {'Жами':<10} {total_today_quantity:>8.0f} {total_quantity:>12.0f}")
+        table_title = "📊 Свод деталлари"
+        columns = ["№", "Туман", f"Бир кунда ({date.today().strftime('%d.%m.%Y')})", "Мавсумда"]
+        rows = [
+            [
+                str(index),
+                (item.get("district_name") or "-")[:24],
+                f"{float(item.get('today_quantity') or 0):.0f}",
+                f"{float(item.get('total_quantity') or 0):.0f}",
+            ]
+            for index, item in enumerate(page_items, start=start + 1)
+        ]
+        footer_lines = [
+            f"Жами бир кунда: {total_today_quantity:.0f}",
+            f"Жами мавсумда: {total_quantity:.0f}",
+        ]
 
-    content = "\n".join(lines)
+    image_bytes = build_table_image(
+        title=table_title,
+        subtitle=subtitle,
+        columns=columns,
+        rows=rows,
+        footer_lines=footer_lines,
+    )
 
     section = "report" if movement == "report" else movement
     back_callback = f"warehouse_back_to_products:{warehouse_id}:{movement}:{district_id}:{section}"
@@ -466,7 +482,7 @@ async def _send_warehouse_movements_page(
         ),
         back_callback=back_callback,
     )
-    await message.edit_text(f"<pre>{content}</pre>", parse_mode="HTML", reply_markup=keyboard)
+    await send_or_edit_table_image(message, image_bytes, keyboard, edit=True)
 
 
 async def _send_warehouse_products_page(message, warehouse_id: int, movement: str, district_id: int, warehouse_name: str):

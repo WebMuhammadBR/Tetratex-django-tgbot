@@ -5,7 +5,8 @@ from services.api_client import get_farmers
 from excel_export import farmers_to_excel
 from keyboards import farmers_filter_keyboard, farmers_pagination_keyboard
 from middlewares.access import access_required
-from services.pagination import build_page_text, paginate_data
+from services.pagination import paginate_data
+from services.table_image import build_table_image, send_or_edit_table_image
 
 router = Router()
 PER_PAGE = 25
@@ -45,21 +46,24 @@ async def send_page(target, page, district_index, edit):
 
     district_title = "Умумий" if district == "all" else district
 
-    text = build_page_text(
-        title=f"📋 Фермер Баланс: {district_title}",
-        headers=f"{'№':<3} {'Фермер номи':<18} {'Баланс':>13}",
-        subheaders=f"{' ':<3} {' ':<18} {'(млн)':>13}",
-        rows=[
-            f"{index:<3} {farmer['name'][:18]:<18} {float(farmer['balance']) / 1_000_000:>13,.1f}"
-            for index, farmer in enumerate(page_data, start=start + 1)
-        ],
-    )
-    keyboard = farmers_pagination_keyboard(page, end < len(filtered_data), district_index)
+    rows = [
+        [
+            str(index),
+            farmer["name"][:28],
+            f"{float(farmer['balance']) / 1_000_000:,.1f}",
+        ]
+        for index, farmer in enumerate(page_data, start=start + 1)
+    ]
 
-    if edit:
-        await target.edit_text(f"<pre>{text}</pre>", parse_mode="HTML", reply_markup=keyboard)
-    else:
-        await target.answer(f"<pre>{text}</pre>", parse_mode="HTML", reply_markup=keyboard)
+    image_bytes = build_table_image(
+        title="📋 Фермер Баланс",
+        subtitle=f"Туман: {district_title}",
+        columns=["№", "Фермер номи", "Баланс (млн)"],
+        rows=rows,
+    )
+
+    keyboard = farmers_pagination_keyboard(page, end < len(filtered_data), district_index)
+    await send_or_edit_table_image(target, image_bytes, keyboard, edit)
 
 
 @router.callback_query(F.data.startswith("farmers_export_excel:"))
