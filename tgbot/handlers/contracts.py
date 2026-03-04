@@ -1,4 +1,5 @@
 from aiogram import Router, F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import Message, CallbackQuery, BufferedInputFile
 from services.api_client import get_contracts_summary
 from excel_export import contracts_to_excel
@@ -63,10 +64,14 @@ async def contracts_back_to_filters(callback: CallbackQuery):
     contract_type = callback.data.split(":", 1)[1]
     data = await get_contracts_data(contract_type)
     districts = extract_districts(data)
-    await callback.message.edit_text(
+    await callback.message.answer(
         "Туманни танланг 👇",
         reply_markup=contracts_filter_keyboard(districts, contract_type),
     )
+    try:
+        await callback.message.delete()
+    except TelegramBadRequest:
+        pass
     await callback.answer()
 
 

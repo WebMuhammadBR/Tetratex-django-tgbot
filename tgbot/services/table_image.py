@@ -18,6 +18,10 @@ _ROW_ALT = "#f8fbff"
 
 
 _FONT_PATHS = [
+    "DejaVuSans.ttf",
+    "Arial.ttf",
+    "C:/Windows/Fonts/arial.ttf",
+    "C:/Windows/Fonts/segoeui.ttf",
     "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
     "/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf",
 ]
@@ -27,14 +31,19 @@ def _load_font(size: int, bold: bool = False):
     from PIL import ImageFont
     if bold:
         bold_candidates = [
+            "DejaVuSans-Bold.ttf",
+            "Arial Bold.ttf",
+            "arialbd.ttf",
+            "C:/Windows/Fonts/arialbd.ttf",
+            "C:/Windows/Fonts/seguisb.ttf",
             "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
             "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
         ]
         for path in bold_candidates:
-            if Path(path).exists():
+            if not Path(path).is_absolute() or Path(path).exists():
                 return ImageFont.truetype(path, size)
     for path in _FONT_PATHS:
-        if Path(path).exists():
+        if not Path(path).is_absolute() or Path(path).exists():
             return ImageFont.truetype(path, size)
     return ImageFont.load_default()
 
