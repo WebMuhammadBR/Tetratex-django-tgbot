@@ -65,6 +65,7 @@ async def send_page(target, page, district_index, edit):
             str(index),
             farmer.get("district") or "-",
             farmer.get("massive") or "-",
+            farmer.get("name") or "-",
             farmer.get("contract") or "-",
             f"{float(farmer['balance']) / 1_000_000:,.1f}",
         ]
@@ -74,8 +75,10 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        columns=["№", "Туман", "Массив", "Шартнома №", "Баланс (млн)"],
+        columns=["№", "Туман", "Массив", "Фермер номи", "Шартнома №", "Баланс"],
         rows=rows,
+        equal_column_width=True,
+        min_rows=PER_PAGE,
     )
 
     keyboard = farmers_pagination_keyboard(page, end < len(filtered_data), district_index)
