@@ -71,6 +71,7 @@ def build_table_image(
     footer_lines: list[str] | None = None,
     equal_column_width: bool = False,
     column_width: int | None = None,
+    column_widths: list[int] | None = None,
     min_rows: int | None = None,
 ) -> bytes:
     from PIL import Image, ImageDraw
@@ -93,7 +94,11 @@ def build_table_image(
             max_width = max(max_width, cell_width)
         col_widths.append(max_width + 34)
 
-    if equal_column_width and col_widths:
+    if column_widths:
+        if len(column_widths) != len(columns):
+            raise ValueError("column_widths length must match columns length")
+        col_widths = [max(1, width) for width in column_widths]
+    elif equal_column_width and col_widths:
         enforced_width = max(col_widths)
         if column_width is not None:
             enforced_width = max(enforced_width, column_width)
