@@ -33,7 +33,21 @@ async def farmers_pagination(callback: CallbackQuery):
 async def farmers_back_to_filters(callback: CallbackQuery):
     data = await get_farmers()
     districts = extract_districts(data)
-    await callback.message.edit_text("Туманни танланг 👇", reply_markup=farmers_filter_keyboard(districts))
+
+    # Previous bot response can be an image message (without text),
+    # so editing text fails with: "there is no text in the message to edit".
+    if callback.message.text:
+        await callback.message.edit_text(
+            "Туманни танланг 👇",
+            reply_markup=farmers_filter_keyboard(districts),
+        )
+    else:
+        await callback.message.answer(
+            "Туманни танланг 👇",
+            reply_markup=farmers_filter_keyboard(districts),
+        )
+        await callback.message.delete()
+
     await callback.answer()
 
 
