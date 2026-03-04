@@ -29,22 +29,31 @@ _FONT_PATHS = [
 
 def _load_font(size: int, bold: bool = False):
     from PIL import ImageFont
+
+    candidates = []
     if bold:
-        bold_candidates = [
-            "DejaVuSans-Bold.ttf",
-            "Arial Bold.ttf",
-            "arialbd.ttf",
-            "C:/Windows/Fonts/arialbd.ttf",
-            "C:/Windows/Fonts/seguisb.ttf",
-            "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
-            "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
-        ]
-        for path in bold_candidates:
-            if not Path(path).is_absolute() or Path(path).exists():
-                return ImageFont.truetype(path, size)
-    for path in _FONT_PATHS:
-        if not Path(path).is_absolute() or Path(path).exists():
+        candidates.extend(
+            [
+                "DejaVuSans-Bold.ttf",
+                "Arial Bold.ttf",
+                "arialbd.ttf",
+                "C:/Windows/Fonts/arialbd.ttf",
+                "C:/Windows/Fonts/seguisb.ttf",
+                "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf",
+                "/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf",
+            ]
+        )
+
+    candidates.extend(_FONT_PATHS)
+
+    for path in candidates:
+        if Path(path).is_absolute() and not Path(path).exists():
+            continue
+        try:
             return ImageFont.truetype(path, size)
+        except OSError:
+            continue
+
     return ImageFont.load_default()
 
 
