@@ -9,7 +9,7 @@ from services.pagination import paginate_data
 from services.table_image import build_table_image, send_or_edit_table_image
 
 router = Router()
-PER_PAGE = 25
+PER_PAGE = 15
 
 CONTRACT_TYPE_ALL = "all"
 CONTRACT_TYPE_MAP = {

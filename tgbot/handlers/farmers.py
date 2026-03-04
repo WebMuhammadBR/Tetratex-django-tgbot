@@ -9,7 +9,7 @@ from services.pagination import paginate_data
 from services.table_image import build_table_image, send_or_edit_table_image
 
 router = Router()
-PER_PAGE = 25
+PER_PAGE = 15
 
 
 @router.message(F.text == "📋 Фермер Баланс")
@@ -63,7 +63,10 @@ async def send_page(target, page, district_index, edit):
     rows = [
         [
             str(index),
-            farmer["name"][:28],
+            farmer["name"][:24],
+            farmer.get("contract") or "-",
+            farmer.get("district") or "-",
+            farmer.get("massive") or "-",
             f"{float(farmer['balance']) / 1_000_000:,.1f}",
         ]
         for index, farmer in enumerate(page_data, start=start + 1)
@@ -72,7 +75,7 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        columns=["№", "Фермер номи", "Баланс (млн)"],
+        columns=["№", "Фермер номи", "Шартнома", "Туман", "Массив", "Баланс (млн)"],
         rows=rows,
     )
 
