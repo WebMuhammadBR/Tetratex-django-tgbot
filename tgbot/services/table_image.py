@@ -69,6 +69,9 @@ def build_table_image(
     rows: list[list[str]],
     subtitle: str | None = None,
     footer_lines: list[str] | None = None,
+    equal_column_width: bool = False,
+    column_width: int | None = None,
+    min_rows: int | None = None,
 ) -> bytes:
     from PIL import Image, ImageDraw
 
@@ -90,6 +93,12 @@ def build_table_image(
             max_width = max(max_width, cell_width)
         col_widths.append(max_width + 34)
 
+    if equal_column_width and col_widths:
+        enforced_width = max(col_widths)
+        if column_width is not None:
+            enforced_width = max(enforced_width, column_width)
+        col_widths = [enforced_width] * len(col_widths)
+
     side_padding = 34
     cell_padding_y = 18
     table_width = sum(col_widths)
@@ -104,7 +113,8 @@ def build_table_image(
     top_pad = 28
     text_gap = 16
     table_top = top_pad + title_h + (subtitle_h + 8 if subtitle else 0) + text_gap
-    table_h = header_h + max(1, len(rows)) * row_h
+    row_count = max(1, len(rows), min_rows or 0)
+    table_h = header_h + row_count * row_h
     image_height = table_top + table_h + footer_h + 44
 
     img = Image.new("RGB", (image_width, image_height), _BG_COLOR)
@@ -129,7 +139,11 @@ def build_table_image(
 
     y += header_h
     if rows:
-        for row_idx, row in enumerate(rows):
+        padded_rows = rows
+        if min_rows and len(rows) < min_rows:
+            padded_rows = rows + [["" for _ in columns] for _ in range(min_rows - len(rows))]
+
+        for row_idx, row in enumerate(padded_rows):
             row_bg = _ROW_ALT if row_idx % 2 == 0 else _CARD_COLOR
             draw.rectangle((x, y, x + table_width, y + row_h), fill=row_bg)
             cursor_x = x
