@@ -53,8 +53,9 @@ async def farmers_to_excel(data: list):
         formatted.append(
             {
                 "№": index,
-                "ИНН": farmer["inn"],
-                "Фермер номи": farmer["name"],
+                "Туман": farmer.get("district") or "-",
+                "Массив": farmer.get("massive") or "-",
+                "Шартнома №": farmer.get("contract") or "-",
                 "Баланс": float(farmer["balance"]),
             }
         )
