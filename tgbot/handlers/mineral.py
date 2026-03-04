@@ -22,7 +22,7 @@ from services.api_client import (
 )
 
 router = Router()
-PER_PAGE = 25
+PER_PAGE = 15
 USER_SELECTED_WAREHOUSE: dict[int, int] = {}
 
 WAREHOUSE_RECEIPT_NAMES = {"📥 Кирим", "kirim", "krim", "кирим"}

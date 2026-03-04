@@ -25,6 +25,7 @@ class FarmerListAPIView(APIView):
             Farmer.objects
             .filter(is_active=True)
             .select_related("massive__district__region")
+            .prefetch_related("contracts")
             .order_by(
                 "massive__district__id",
                 "massive__id",

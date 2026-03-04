@@ -177,3 +177,37 @@ class FarmerSummaryContractTypeFilterAPITest(TestCase):
         self.assertEqual(len(response.data), 1)
         self.assertEqual(Decimal(str(response.data[0]['quantity'])), Decimal('50.00'))
         self.assertEqual(Decimal(str(response.data[0]['amount'])), Decimal('100000.00'))
+
+
+class FarmerListAPITest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        region = Region.objects.create(name="Samarqand")
+        district = District.objects.create(region=region, name="Pastdargom")
+        massive = Massive.objects.create(district=district, name="Massiv-7")
+
+        self.farmer = Farmer.objects.create(
+            name="Farmer List",
+            inn="111222333",
+            massive=massive,
+            maydon=Decimal("12.00"),
+        )
+
+        Contract.objects.create(
+            farmer=self.farmer,
+            number="CNT-77",
+            contract_type="futures",
+            date="2026-01-10",
+            planned_quantity=Decimal("12.00"),
+            price=Decimal("1000.00"),
+        )
+
+    def test_list_contains_contract_district_and_massive(self):
+        response = self.client.get('/api/farmers/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]['contract'], 'CNT-77')
+        self.assertEqual(response.data[0]['district'], 'Pastdargom')
+        self.assertEqual(response.data[0]['massive'], 'Massiv-7')
