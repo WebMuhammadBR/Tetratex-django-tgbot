@@ -55,7 +55,7 @@ async def send_page(target, page, district_index, edit):
     data = await get_farmers()
     districts = extract_districts(data)
     district = get_district_by_index(districts, district_index)
-    filtered_data = filter_by_district(data, district)
+    filtered_data = sort_farmers(filter_by_district(data, district))
     page_data, start, end = paginate_data(filtered_data, page, PER_PAGE)
 
     district_title = "Умумий" if district == "all" else district
@@ -63,10 +63,9 @@ async def send_page(target, page, district_index, edit):
     rows = [
         [
             str(index),
-            farmer["name"][:24],
-            farmer.get("contract") or "-",
             farmer.get("district") or "-",
             farmer.get("massive") or "-",
+            farmer.get("contract") or "-",
             f"{float(farmer['balance']) / 1_000_000:,.1f}",
         ]
         for index, farmer in enumerate(page_data, start=start + 1)
@@ -75,7 +74,7 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        columns=["№", "Фермер номи", "Шартнома", "Туман", "Массив", "Баланс (млн)"],
+        columns=["№", "Туман", "Массив", "Шартнома №", "Баланс (млн)"],
         rows=rows,
     )
 
@@ -90,7 +89,7 @@ async def farmers_excel(callback: CallbackQuery):
     data = await get_farmers()
     districts = extract_districts(data)
     district = get_district_by_index(districts, district_index)
-    filtered_data = filter_by_district(data, district)
+    filtered_data = sort_farmers(filter_by_district(data, district))
 
     file_buffer = await farmers_to_excel(filtered_data)
 
@@ -123,6 +122,18 @@ def filter_by_district(data: list[dict], district: str) -> list[dict]:
     if district == "all":
         return data
     return [farmer for farmer in data if farmer.get("district") == district]
+
+
+def sort_farmers(data: list[dict]) -> list[dict]:
+    return sorted(
+        data,
+        key=lambda farmer: (
+            (farmer.get("district") or "").lower(),
+            (farmer.get("massive") or "").lower(),
+            (farmer.get("contract") or "").lower(),
+            -float(farmer.get("balance") or 0),
+        )
+    )
 
 
 def get_district_by_index(districts: list[str], district_index: int) -> str:
