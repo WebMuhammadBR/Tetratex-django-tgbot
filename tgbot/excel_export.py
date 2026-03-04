@@ -1,0 +1,177 @@
+#11111111111111111111111111
+from io import BytesIO
+from datetime import datetime
+import pandas as pd
+from openpyxl.styles import Font
+
+
+
+
+def _excel_date(value):
+    if not value:
+        return "-"
+
+    date_text = str(value).strip()
+    normalized = date_text.replace("Z", "+00:00")
+
+    try:
+        return datetime.fromisoformat(normalized).strftime("%d.%m.%Y")
+    except ValueError:
+        pass
+
+    for date_format in ("%Y-%m-%d", "%d.%m.%Y"):
+        try:
+            return datetime.strptime(date_text[:10], date_format).strftime("%d.%m.%Y")
+        except ValueError:
+            continue
+
+    return date_text[:10]
+
+
+def _autosize_and_bold(worksheet):
+    for cell in worksheet[1]:
+        cell.font = Font(bold=True)
+
+    for column in worksheet.columns:
+        max_length = 0
+        column_letter = column[0].column_letter
+
+        for cell in column:
+            value = cell.value
+            if value is not None:
+                max_length = max(max_length, len(str(value)))
+
+        worksheet.column_dimensions[column_letter].width = max_length + 2
+
+
+async def farmers_to_excel(data: list):
+    if not data:
+        return None
+
+    formatted = []
+    for index, farmer in enumerate(data, start=1):
+        formatted.append(
+            {
+                "№": index,
+                "ИНН": farmer["inn"],
+                "Фермер номи": farmer["name"],
+                "Баланс": float(farmer["balance"]),
+            }
+        )
+
+    df = pd.DataFrame(formatted)
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Farmers")
+        _autosize_and_bold(writer.sheets["Farmers"])
+
+    buffer.seek(0)
+    return buffer
+
+
+CONTRACT_TYPE_LABELS = {
+    "futures": "Фючерс",
+    "forward": "Форвард",
+    "storage": "Сақлаш",
+    "all": "Ҳаммаси",
+}
+
+
+async def contracts_to_excel(data: list, contract_type: str = "all"):
+    if not data:
+        return None
+
+    formatted = []
+    for index, item in enumerate(data, start=1):
+        row_contract_type = item.get("contract_type", contract_type)
+        contract_type_label = CONTRACT_TYPE_LABELS.get(row_contract_type, "Ҳаммаси")
+        formatted.append(
+            {
+                "№": index,
+                "Шартнома тури": contract_type_label,
+                "Вилоят": item["region"],
+                "Туман": item["district"],
+                "Массив": item["massive"],
+                "Фермер": item["name"],
+                "Миқдор (тн)": float(item["quantity"]),
+                "Сумма": float(item["amount"]),
+            }
+        )
+
+    df = pd.DataFrame(formatted)
+    buffer = BytesIO()
+
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="Contracts")
+        _autosize_and_bold(writer.sheets["Contracts"])
+
+    buffer.seek(0)
+    return buffer
+
+
+async def warehouse_receipts_to_excel(data: list[dict]):
+    if not data:
+        return None
+
+    formatted = []
+    for index, item in enumerate(data, start=1):
+        formatted.append(
+            {
+                "№": index,
+                "Сана": item.get("date"),
+                "Накладной": item.get("invoice_number") or "-",
+                "Маҳсулот": item.get("product_name") or "-",
+                "Қоп сони": item.get("bag_count") or 0,
+                "Миқдор": float(item.get("quantity") or 0),
+            }
+        )
+
+    df = pd.DataFrame(formatted)
+    buffer = BytesIO()
+
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="WarehouseReceipts")
+        _autosize_and_bold(writer.sheets["WarehouseReceipts"])
+
+    buffer.seek(0)
+    return buffer
+
+
+async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
+    if not data:
+        return None
+
+    formatted = []
+    for index, item in enumerate(data, start=1):
+        if mode == "report":
+            formatted.append(
+                {
+                    "№": index,
+                    "Туман": item.get("district_name") or "-",
+                    f"Бир кунда ({datetime.now().strftime('%d.%m.%Y')})": float(item.get("today_quantity") or 0),
+                    "Миқдори (умумий)": float(item.get("total_quantity") or item.get("quantity") or 0),
+                }
+            )
+            continue
+
+        formatted.append(
+            {
+                "№": index,
+                "Сана": _excel_date(item.get("date")),
+                "Ҳужжат №": item.get("number") or "-",
+                "Фермер": item.get("farmer_name") or "-",
+                "Маҳсулот": item.get("product_name") or "-",
+                "Миқдор": float(item.get("quantity") or 0),
+                "Га/кг": round(float(item.get("quantity_per_area") or 0)),
+            }
+        )
+
+    df = pd.DataFrame(formatted)
+    buffer = BytesIO()
+
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="WarehouseExpenses")
+        _autosize_and_bold(writer.sheets["WarehouseExpenses"])
+
+    buffer.seek(0)
+    return buffer
