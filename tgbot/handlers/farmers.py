@@ -12,6 +12,32 @@ router = Router()
 PER_PAGE = 15
 
 
+def _rows_with_dynamic_products(data: list[dict], start_index: int):
+    product_names = sorted(
+        {
+            (name or "-").strip() or "-"
+            for farmer in data
+            for name in (farmer.get("product_totals") or {}).keys()
+        },
+        key=lambda value: value.lower(),
+    )
+
+    rows = []
+    for index, farmer in enumerate(data, start=start_index):
+        product_totals = farmer.get("product_totals") or {}
+        row = [
+            str(index),
+            farmer.get("district") or "-",
+            farmer.get("massive") or "-",
+            farmer.get("name") or "-",
+        ]
+        row.extend(f"{float(product_totals.get(product_name) or 0):,.1f}" for product_name in product_names)
+        row.append(f"{float(farmer.get('farmer_total_amount') or 0):,.1f}")
+        rows.append(row)
+
+    return product_names, rows
+
+
 @router.message(F.text == "📋 Фермер Баланс")
 @access_required
 async def farmers_handler(message: Message):
@@ -60,26 +86,29 @@ async def send_page(target, page, district_index, edit):
 
     district_title = "Умумий" if district == "all" else district
 
-    rows = [
-        [
-            str(index),
-            farmer.get("district") or "-",
-            farmer.get("massive") or "-",
-            farmer.get("name") or "-",
-            farmer.get("contract") or "-",
-            f"{float(farmer['balance']) :,.1f}",
-        ]
-        for index, farmer in enumerate(page_data, start=start + 1)
-    ]
+    product_names, rows = _rows_with_dynamic_products(page_data, start + 1)
+
+    columns = ["№", "Туман", "Массив", "Фермер номи", *product_names, "Жами"]
+    column_widths = [80, 160, 160, 320, *([170] * len(product_names)), 170]
+    column_alignments = ["center", "left", "left", "left", *(["right"] * len(product_names)), "right"]
+
+    totals_by_product = []
+    for product_name in product_names:
+        total_value = sum(float((item.get("product_totals") or {}).get(product_name) or 0) for item in filtered_data)
+        totals_by_product.append(f"{total_value:,.1f}")
+
+    grand_total = sum(float(item.get("farmer_total_amount") or 0) for item in filtered_data)
+
+    rows.append(["", "", "", "Жами", *totals_by_product, f"{grand_total:,.1f}"])
 
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        columns=["№", "Туман", "Массив", "Фермер номи", "Ш/р №", "Баланс"],
-        column_widths=[80, 160, 160, 400, 130, 200],
-        column_alignments=["center", "left", "left", "left", "center", "center"],
+        columns=columns,
+        column_widths=column_widths,
+        column_alignments=column_alignments,
         rows=rows,
-        min_rows=PER_PAGE,
+        min_rows=PER_PAGE + 1,
     )
 
     keyboard = farmers_pagination_keyboard(page, end < len(filtered_data), district_index)

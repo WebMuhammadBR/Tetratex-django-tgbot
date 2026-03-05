@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from query.models.bot import BotUser, BotUserActivity
 from query.models.counterparties import Farmer
-from query.models.documents import MineralWarehouseReceipt, GoodsGivenDocument, Warehouse
+from query.models.documents import MineralWarehouseReceipt, GoodsGivenDocument, GoodsGivenItem, Warehouse
 from .serializers import (
     FarmerSerializer,
     FarmerSummarySerializer,
@@ -32,8 +32,35 @@ class FarmerListAPIView(APIView):
                 "name"
             )
         )
+
         serializer = FarmerSerializer(farmers, many=True)
-        return Response(serializer.data)
+        farmer_rows = serializer.data
+
+        product_totals_by_farmer: dict[int, dict[str, Decimal]] = {}
+        totals_rows = (
+            GoodsGivenItem.objects
+            .filter(document__farmer_id__in=[farmer.id for farmer in farmers])
+            .values("document__farmer_id", "product__name")
+            .annotate(total_amount=Coalesce(Sum("amount"), Decimal("0.00")))
+        )
+
+        for row in totals_rows:
+            farmer_id = row.get("document__farmer_id")
+            product_name = row.get("product__name") or "-"
+            total_amount = row.get("total_amount") or Decimal("0.00")
+            farmer_totals = product_totals_by_farmer.setdefault(farmer_id, {})
+            farmer_totals[product_name] = total_amount
+
+        for farmer_row in farmer_rows:
+            farmer_id = farmer_row.get("id")
+            product_totals = product_totals_by_farmer.get(farmer_id, {})
+            farmer_row["product_totals"] = {
+                product: amount
+                for product, amount in sorted(product_totals.items(), key=lambda item: item[0].lower())
+            }
+            farmer_row["farmer_total_amount"] = sum(product_totals.values(), Decimal("0.00"))
+
+        return Response(farmer_rows)
 
 
 class FarmerSummaryAPIView(ListAPIView):
