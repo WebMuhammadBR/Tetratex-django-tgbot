@@ -93,7 +93,7 @@ async def send_page(target, page, district_index, edit):
     product_names, rows = _rows_with_dynamic_products(page_data, start + 1)
 
     columns = ["№", "Туман", "Массив", "Фермер номи", *product_names, "Жами"]
-    column_widths = [80, 160, 160, 320, *([170] * len(product_names)), 170]
+    column_widths = [80, 160, 160, 360, *([180] * len(product_names)), 170]
     column_alignments = ["center", "left", "left", "left", *(["center"] * len(product_names)), "center"]
 
     totals_by_product = []
