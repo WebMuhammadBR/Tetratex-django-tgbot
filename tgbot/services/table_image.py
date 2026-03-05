@@ -72,6 +72,7 @@ def build_table_image(
     equal_column_width: bool = False,
     column_width: int | None = None,
     column_widths: list[int] | None = None,
+    column_alignments: list[str] | None = None,
     min_rows: int | None = None,
 ) -> bytes:
     from PIL import Image, ImageDraw
@@ -103,6 +104,18 @@ def build_table_image(
         if column_width is not None:
             enforced_width = max(enforced_width, column_width)
         col_widths = [enforced_width] * len(col_widths)
+
+    if column_alignments and len(column_alignments) != len(columns):
+        raise ValueError("column_alignments length must match columns length")
+
+    alignments = [
+        (column_alignments[idx].lower() if column_alignments else "left")
+        for idx in range(len(columns))
+    ]
+
+    for alignment in alignments:
+        if alignment not in {"left", "center", "right"}:
+            raise ValueError("column_alignments must be left, center or right")
 
     side_padding = 34
     cell_padding_y = 18
@@ -137,7 +150,15 @@ def build_table_image(
 
     cursor_x = x
     for idx, col in enumerate(columns):
-        draw.text((cursor_x + 16, y + cell_padding_y), col, font=header_font, fill=_HEADER_TEXT)
+        col_w, _ = _text_size(draw, col, header_font)
+        if alignments[idx] == "center":
+            text_x = cursor_x + (col_widths[idx] - col_w) / 2
+        elif alignments[idx] == "right":
+            text_x = cursor_x + col_widths[idx] - col_w - 16
+        else:
+            text_x = cursor_x + 16
+
+        draw.text((text_x, y + cell_padding_y), col, font=header_font, fill=_HEADER_TEXT)
         if idx > 0:
             draw.line((cursor_x, y, cursor_x, y + table_h), fill=_BORDER, width=1)
         cursor_x += col_widths[idx]
@@ -154,7 +175,15 @@ def build_table_image(
             cursor_x = x
             for col_idx, width in enumerate(col_widths):
                 cell = row[col_idx] if col_idx < len(row) else ""
-                draw.text((cursor_x + 16, y + cell_padding_y), cell, font=body_font, fill=_TEXT_COLOR)
+                cell_w, _ = _text_size(draw, cell, body_font)
+                if alignments[col_idx] == "center":
+                    text_x = cursor_x + (width - cell_w) / 2
+                elif alignments[col_idx] == "right":
+                    text_x = cursor_x + width - cell_w - 16
+                else:
+                    text_x = cursor_x + 16
+
+                draw.text((text_x, y + cell_padding_y), cell, font=body_font, fill=_TEXT_COLOR)
                 cursor_x += width
             draw.line((x, y + row_h, x + table_width, y + row_h), fill=_BORDER, width=1)
             y += row_h
