@@ -5,7 +5,8 @@ import pandas as pd
 from openpyxl.styles import Font
 
 
-
+def _as_int_amount(value):
+    return int(float(value or 0))
 
 def _excel_date(value):
     if not value:
@@ -68,15 +69,15 @@ async def farmers_to_excel(data: list):
 
         product_totals = farmer.get("product_totals") or {}
         for product_name in all_products:
-            row[product_name] = float(product_totals.get(product_name) or 0)
+            row[product_name] = _as_int_amount(product_totals.get(product_name))
 
-        row["Жами"] = float(farmer.get("farmer_total_amount") or 0)
+        row["Жами"] = _as_int_amount(farmer.get("farmer_total_amount"))
         formatted.append(row)
 
     totals_row = {"№": "", "Туман": "", "Массив": "", "Фермер номи": "Жами"}
     for product_name in all_products:
-        totals_row[product_name] = sum(float((farmer.get("product_totals") or {}).get(product_name) or 0) for farmer in data)
-    totals_row["Жами"] = sum(float(farmer.get("farmer_total_amount") or 0) for farmer in data)
+        totals_row[product_name] = _as_int_amount(sum(float((farmer.get("product_totals") or {}).get(product_name) or 0) for farmer in data))
+    totals_row["Жами"] = _as_int_amount(sum(float(farmer.get("farmer_total_amount") or 0) for farmer in data))
     formatted.append(totals_row)
 
     df = pd.DataFrame(formatted)
