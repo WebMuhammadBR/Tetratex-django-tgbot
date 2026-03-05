@@ -77,7 +77,7 @@ async def send_page(target, page, district_index, edit):
         subtitle=f"Туман: {district_title}",
         columns=["№", "Туман", "Массив", "Фермер номи", "Ш/р №", "Баланс"],
         column_widths=[80, 160, 160, 400, 130, 200],
-        column_alignments=["center", "center", "center", "left", "center", "center"],
+        column_alignments=["center", "left", "left", "left", "center", "center"],
         rows=rows,
         min_rows=PER_PAGE,
     )
