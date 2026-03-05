@@ -12,6 +12,10 @@ router = Router()
 PER_PAGE = 15
 
 
+def _as_int_amount(value) -> int:
+    return int(float(value or 0))
+
+
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
     product_names = sorted(
         {
@@ -31,8 +35,8 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
             farmer.get("massive") or "-",
             farmer.get("name") or "-",
         ]
-        row.extend(f"{float(product_totals.get(product_name) or 0):,.1f}" for product_name in product_names)
-        row.append(f"{float(farmer.get('farmer_total_amount') or 0):,.1f}")
+        row.extend(f"{_as_int_amount(product_totals.get(product_name)):,.0f}" for product_name in product_names)
+        row.append(f"{_as_int_amount(farmer.get('farmer_total_amount')):,.0f}")
         rows.append(row)
 
     return product_names, rows
@@ -95,11 +99,11 @@ async def send_page(target, page, district_index, edit):
     totals_by_product = []
     for product_name in product_names:
         total_value = sum(float((item.get("product_totals") or {}).get(product_name) or 0) for item in filtered_data)
-        totals_by_product.append(f"{total_value:,.1f}")
+        totals_by_product.append(f"{_as_int_amount(total_value):,.0f}")
 
     grand_total = sum(float(item.get("farmer_total_amount") or 0) for item in filtered_data)
 
-    rows.append(["", "", "", "Жами", *totals_by_product, f"{grand_total:,.1f}"])
+    rows.append(["", "", "", "Жами", *totals_by_product, f"{_as_int_amount(grand_total):,.0f}"])
 
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
