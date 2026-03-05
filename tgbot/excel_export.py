@@ -48,17 +48,36 @@ async def farmers_to_excel(data: list):
     if not data:
         return None
 
+    all_products = sorted(
+        {
+            (name or "-").strip() or "-"
+            for farmer in data
+            for name in (farmer.get("product_totals") or {}).keys()
+        },
+        key=lambda value: value.lower(),
+    )
+
     formatted = []
     for index, farmer in enumerate(data, start=1):
-        formatted.append(
-            {
-                "№": index,
-                "Туман": farmer.get("district") or "-",
-                "Массив": farmer.get("massive") or "-",
-                "Шартнома №": farmer.get("contract") or "-",
-                "Баланс": float(farmer["balance"]),
-            }
-        )
+        row = {
+            "№": index,
+            "Туман": farmer.get("district") or "-",
+            "Массив": farmer.get("massive") or "-",
+            "Фермер номи": farmer.get("name") or "-",
+        }
+
+        product_totals = farmer.get("product_totals") or {}
+        for product_name in all_products:
+            row[product_name] = float(product_totals.get(product_name) or 0)
+
+        row["Жами"] = float(farmer.get("farmer_total_amount") or 0)
+        formatted.append(row)
+
+    totals_row = {"№": "", "Туман": "", "Массив": "", "Фермер номи": "Жами"}
+    for product_name in all_products:
+        totals_row[product_name] = sum(float((farmer.get("product_totals") or {}).get(product_name) or 0) for farmer in data)
+    totals_row["Жами"] = sum(float(farmer.get("farmer_total_amount") or 0) for farmer in data)
+    formatted.append(totals_row)
 
     df = pd.DataFrame(formatted)
     buffer = BytesIO()

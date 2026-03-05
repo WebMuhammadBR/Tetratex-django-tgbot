@@ -211,3 +211,65 @@ class FarmerListAPITest(TestCase):
         self.assertEqual(response.data[0]['contract'], 'CNT-77')
         self.assertEqual(response.data[0]['district'], 'Pastdargom')
         self.assertEqual(response.data[0]['massive'], 'Massiv-7')
+
+
+class FarmerListProductTotalsAPITest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        region = Region.objects.create(name="Jizzax")
+        district = District.objects.create(region=region, name="Gallaorol")
+        massive = Massive.objects.create(district=district, name="Massiv-9")
+
+        self.farmer = Farmer.objects.create(
+            name="Farmer Totals",
+            inn="123123123",
+            massive=massive,
+            maydon=Decimal("20.00"),
+        )
+
+        self.contract = Contract.objects.create(
+            farmer=self.farmer,
+            number="CNT-99",
+            contract_type="futures",
+            date="2026-01-15",
+            planned_quantity=Decimal("40.00"),
+            price=Decimal("1000.00"),
+        )
+
+        self.warehouse = Warehouse.objects.create(name="Totals Warehouse")
+        unit = Unit.objects.create(name="Dona", short_name="d")
+        self.product_1 = Product.objects.create(name="Ammofos", unit=unit)
+        self.product_2 = Product.objects.create(name="Karbamid", unit=unit)
+
+    def test_list_contains_product_totals_and_farmer_total_amount(self):
+        document = GoodsGivenDocument.objects.create(
+            date="2026-02-10",
+            number="GD-100",
+            farmer=self.farmer,
+            contract=self.contract,
+            warehouse=self.warehouse,
+        )
+
+        GoodsGivenItem.objects.create(
+            document=document,
+            product=self.product_1,
+            quantity=Decimal("10.00"),
+            price=Decimal("20.00"),
+        )
+        GoodsGivenItem.objects.create(
+            document=document,
+            product=self.product_2,
+            quantity=Decimal("5.00"),
+            price=Decimal("30.00"),
+        )
+
+        response = self.client.get('/api/farmers/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+
+        item = response.data[0]
+        self.assertEqual(Decimal(str(item['product_totals']['Ammofos'])), Decimal('200.00'))
+        self.assertEqual(Decimal(str(item['product_totals']['Karbamid'])), Decimal('150.00'))
+        self.assertEqual(Decimal(str(item['farmer_total_amount'])), Decimal('350.00'))
