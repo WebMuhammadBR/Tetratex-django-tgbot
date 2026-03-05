@@ -90,7 +90,7 @@ async def send_page(target, page, district_index, edit):
 
     columns = ["№", "Туман", "Массив", "Фермер номи", *product_names, "Жами"]
     column_widths = [80, 160, 160, 320, *([170] * len(product_names)), 170]
-    column_alignments = ["center", "left", "left", "left", *(["right"] * len(product_names)), "right"]
+    column_alignments = ["center", "left", "left", "left", *(["center"] * len(product_names)), "center"]
 
     totals_by_product = []
     for product_name in product_names:
