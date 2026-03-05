@@ -67,7 +67,7 @@ async def send_page(target, page, district_index, edit):
             farmer.get("massive") or "-",
             farmer.get("name") or "-",
             farmer.get("contract") or "-",
-            f"{float(farmer['balance']) / 1_000_000:,.1f}",
+            f"{float(farmer['balance']) :,.1f}",
         ]
         for index, farmer in enumerate(page_data, start=start + 1)
     ]
@@ -75,8 +75,8 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        columns=["№", "Туман", "Массив", "Фермер номи", "Шартнома №", "Баланс"],
-        column_widths=[40, 95, 90, 235, 75, 79],
+        columns=["№", "Туман", "Массив", "Фермер номи", "Ш/р №", "Баланс"],
+        column_widths=[60, 150, 150, 500, 120, 140],
         rows=rows,
         min_rows=PER_PAGE,
     )
