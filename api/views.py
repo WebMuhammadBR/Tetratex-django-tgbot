@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from query.models.bot import BotUser, BotUserActivity
 from query.models.counterparties import Farmer
 from query.models.documents import MineralWarehouseReceipt, GoodsGivenDocument, GoodsGivenItem, Warehouse
+from query.models.reference import Product
 from .serializers import (
     FarmerSerializer,
     FarmerSummarySerializer,
@@ -21,6 +22,13 @@ from .serializers import (
 class FarmerListAPIView(APIView):
 
     def get(self, request):
+        product_names = list(
+            Product.objects
+            .filter(is_active=True)
+            .order_by("name")
+            .values_list("name", flat=True)
+        )
+
         farmers = (
             Farmer.objects
             .filter(is_active=True)
@@ -55,8 +63,8 @@ class FarmerListAPIView(APIView):
             farmer_id = farmer_row.get("id")
             product_totals = product_totals_by_farmer.get(farmer_id, {})
             farmer_row["product_totals"] = {
-                product: amount
-                for product, amount in sorted(product_totals.items(), key=lambda item: item[0].lower())
+                product_name: product_totals.get(product_name, Decimal("0.00"))
+                for product_name in product_names
             }
             farmer_row["farmer_total_amount"] = sum(product_totals.values(), Decimal("0.00"))
 
