@@ -68,6 +68,8 @@ def build_table_image(
     columns: list[str],
     rows: list[list[str]],
     subtitle: str | None = None,
+    top_note: str | None = None,
+    top_note_color: str = _MUTED_TEXT,
     footer_lines: list[str] | None = None,
     equal_column_width: bool = False,
     column_width: int | None = None,
@@ -124,13 +126,14 @@ def build_table_image(
 
     title_h = _text_size(draw, title, title_font)[1]
     subtitle_h = _text_size(draw, subtitle or "", subtitle_font)[1] if subtitle else 0
+    top_note_h = _text_size(draw, top_note or "", subtitle_font)[1] if top_note else 0
     header_h = _text_size(draw, "Ag", header_font)[1] + cell_padding_y * 2
     row_h = _text_size(draw, "Ag", body_font)[1] + cell_padding_y * 2
     footer_h = (_text_size(draw, "Ag", footer_font)[1] + 12) * len(footer_lines or [])
 
     top_pad = 28
     text_gap = 16
-    table_top = top_pad + title_h + (subtitle_h + 8 if subtitle else 0) + text_gap
+    table_top = top_pad + title_h + (subtitle_h + 8 if subtitle else 0) + (top_note_h + 8 if top_note else 0) + text_gap
     row_count = max(1, len(rows), min_rows or 0)
     table_h = header_h + row_count * row_h
     image_height = table_top + table_h + footer_h + 44
@@ -141,8 +144,13 @@ def build_table_image(
     draw.rounded_rectangle((12, 12, image_width - 12, image_height - 12), radius=18, fill=_CARD_COLOR, outline=_BORDER, width=2)
 
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
+    subtitle_y = top_pad + title_h + 8
     if subtitle:
-        draw.text((side_padding, top_pad + title_h + 8), subtitle, font=subtitle_font, fill=_MUTED_TEXT)
+        draw.text((side_padding, subtitle_y), subtitle, font=subtitle_font, fill=_MUTED_TEXT)
+
+    if top_note:
+        top_note_y = subtitle_y + (subtitle_h + 8 if subtitle else 0)
+        draw.text((side_padding, top_note_y), top_note, font=subtitle_font, fill=top_note_color)
 
     x = side_padding
     y = table_top

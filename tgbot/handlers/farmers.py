@@ -13,7 +13,8 @@ PER_PAGE = 15
 
 
 def _as_int_amount(value) -> int:
-    return int(float(value or 0))
+    amount = float(value or 0)
+    return int((amount + 500) // 1000 * 1000)
 
 
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
@@ -108,6 +109,8 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
+        top_note="Минг сўмда",
+        top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,
         column_alignments=column_alignments,
