@@ -241,6 +241,23 @@ class FarmerListProductTotalsAPITest(TestCase):
         unit = Unit.objects.create(name="Dona", short_name="d")
         self.product_1 = Product.objects.create(name="Ammofos", unit=unit)
         self.product_2 = Product.objects.create(name="Karbamid", unit=unit)
+        self.product_3 = Product.objects.create(name="Selitra", unit=unit)
+
+        self.second_farmer = Farmer.objects.create(
+            name="Farmer Without Product",
+            inn="321321321",
+            massive=massive,
+            maydon=Decimal("8.00"),
+        )
+
+        Contract.objects.create(
+            farmer=self.second_farmer,
+            number="CNT-100",
+            contract_type="futures",
+            date="2026-01-16",
+            planned_quantity=Decimal("25.00"),
+            price=Decimal("1000.00"),
+        )
 
     def test_list_contains_product_totals_and_farmer_total_amount(self):
         document = GoodsGivenDocument.objects.create(
@@ -267,9 +284,33 @@ class FarmerListProductTotalsAPITest(TestCase):
         response = self.client.get('/api/farmers/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(len(response.data), 1)
+        self.assertEqual(len(response.data), 2)
 
-        item = response.data[0]
+        item = next(row for row in response.data if row['name'] == 'Farmer Totals')
         self.assertEqual(Decimal(str(item['product_totals']['Ammofos'])), Decimal('200.00'))
         self.assertEqual(Decimal(str(item['product_totals']['Karbamid'])), Decimal('150.00'))
+        self.assertEqual(Decimal(str(item['product_totals']['Selitra'])), Decimal('0.00'))
         self.assertEqual(Decimal(str(item['farmer_total_amount'])), Decimal('350.00'))
+
+    def test_list_contains_all_active_products_with_zero_for_missing_items(self):
+        response = self.client.get('/api/farmers/')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 2)
+
+        first = response.data[0]
+        second = response.data[1]
+
+        self.assertSetEqual(
+            set(first['product_totals'].keys()),
+            {'Ammofos', 'Karbamid', 'Selitra'},
+        )
+        self.assertSetEqual(
+            set(second['product_totals'].keys()),
+            {'Ammofos', 'Karbamid', 'Selitra'},
+        )
+
+        self.assertEqual(Decimal(str(second['product_totals']['Ammofos'])), Decimal('0.00'))
+        self.assertEqual(Decimal(str(second['product_totals']['Karbamid'])), Decimal('0.00'))
+        self.assertEqual(Decimal(str(second['product_totals']['Selitra'])), Decimal('0.00'))
+        self.assertEqual(Decimal(str(second['farmer_total_amount'])), Decimal('0.00'))
