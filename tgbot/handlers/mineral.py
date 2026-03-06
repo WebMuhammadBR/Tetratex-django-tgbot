@@ -261,6 +261,7 @@ async def warehouse_item_handler(message: Message):
 @router.callback_query(F.data.startswith("warehouse_back_sections:"))
 @access_required
 async def warehouse_back_sections_handler(callback: CallbackQuery):
+    await callback.answer()
     _, warehouse_id = callback.data.split(":", maxsplit=1)
     warehouse_id = int(warehouse_id)
     warehouse_map = await _warehouse_map()
@@ -271,12 +272,12 @@ async def warehouse_back_sections_handler(callback: CallbackQuery):
         f"🏬 {warehouse_name}\nКеракли бўлимни танланг:\n\n📌 Кирим/Чиқимни пастдаги клавиатурадан танланг."
     )
     await callback.message.answer("Танланг 👇", reply_markup=warehouse_movement_menu())
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("warehouse_expense_district:"))
 @access_required
 async def warehouse_expense_district_handler(callback: CallbackQuery):
+    await callback.answer()
     _, warehouse_id, district_id, section = callback.data.split(":", maxsplit=3)
     warehouse_id = int(warehouse_id)
     district_id = int(district_id)
@@ -291,12 +292,12 @@ async def warehouse_expense_district_handler(callback: CallbackQuery):
         district_id=district_id,
         warehouse_name=warehouse_name,
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("warehouse_back_to_districts:"))
 @access_required
 async def warehouse_back_to_districts_handler(callback: CallbackQuery):
+    await callback.answer()
     parts = callback.data.split(":", maxsplit=2)
     warehouse_id = int(parts[1])
     section = parts[2] if len(parts) > 2 else "out"
@@ -314,12 +315,12 @@ async def warehouse_back_to_districts_handler(callback: CallbackQuery):
         f"🏬 {warehouse_name}\n{title}",
         reply_markup=warehouse_expense_districts_inline_keyboard(warehouse_id, districts, section=section),
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("warehouse_back_to_products:"))
 @access_required
 async def warehouse_back_to_products_handler(callback: CallbackQuery):
+    await callback.answer()
     _, warehouse_id, movement, district_id, section = callback.data.split(":", maxsplit=4)
     warehouse_id = int(warehouse_id)
     district_id = int(district_id)
@@ -333,12 +334,12 @@ async def warehouse_back_to_products_handler(callback: CallbackQuery):
         district_id=district_id,
         warehouse_name=warehouse_name,
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("warehouse_product:"))
 @access_required
 async def warehouse_product_handler(callback: CallbackQuery):
+    await callback.answer()
     _, warehouse_id, movement, product_id = callback.data.split(":", maxsplit=3)
     warehouse_id = int(warehouse_id)
     product_id = int(product_id)
@@ -360,12 +361,12 @@ async def warehouse_product_handler(callback: CallbackQuery):
         district_id=district_id or 0,
         page=1,
     )
-    await callback.answer()
 
 
 @router.callback_query(F.data.startswith("warehouse_movements_page:"))
 @access_required
 async def warehouse_movements_page_handler(callback: CallbackQuery):
+    await callback.answer()
     _, warehouse_id, movement, product_id, district_id, page = callback.data.split(":", maxsplit=5)
     await _send_warehouse_movements_page(
         message=callback.message,
@@ -375,7 +376,6 @@ async def warehouse_movements_page_handler(callback: CallbackQuery):
         district_id=int(district_id),
         page=int(page),
     )
-    await callback.answer()
 
 
 async def _send_warehouse_movements_page(
