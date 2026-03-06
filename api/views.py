@@ -296,6 +296,7 @@ class WarehouseMovementsAPIView(APIView):
                         "product_id": item.product_id,
                         "product_name": item.product.name if item.product else None,
                         "invoice_number": item.invoice_number,
+                        "transport_number": item.transport_number,
                         "bag_count": item.bag_count,
                         "quantity": item.quantity,
                     }
