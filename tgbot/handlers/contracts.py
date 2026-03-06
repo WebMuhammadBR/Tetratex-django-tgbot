@@ -91,6 +91,7 @@ async def send_page(target, page, district_index, contract_type, edit):
                 str(index),
                 contract["district"],
                 contract["massive"],
+                contract["farmer_name"],
                 format_tons(contract["futures"]),
                 format_tons(contract["forward"]),
                 format_tons(contract["storage"]),
@@ -104,6 +105,7 @@ async def send_page(target, page, district_index, contract_type, edit):
             [
                 "",
                 "",
+                "",
                 "Жами",
                 format_tons(totals["futures"]),
                 format_tons(totals["forward"]),
@@ -111,7 +113,7 @@ async def send_page(target, page, district_index, contract_type, edit):
                 format_tons(totals["total"]),
             ]
         )
-        columns = ["№", "Туман", "Массив", "Фючерс", "Форвард", "Сақлаш", "Жами"]
+        columns = ["№", "Туман", "Массив", "Фермер номи", "Фючерс", "Форвард", "Сақлаш", "Жами"]
     else:
         type_label = CONTRACT_TYPE_LABELS.get(contract_type, "Миқдор")
         rows = [
@@ -119,11 +121,12 @@ async def send_page(target, page, district_index, contract_type, edit):
                 str(index),
                 contract["district"],
                 contract["massive"],
+                contract["farmer_name"],
                 format_tons(contract["quantity"]),
             ]
             for index, contract in enumerate(page_data, start=start + 1)
         ]
-        columns = ["№", "Туман", "Массив", type_label]
+        columns = ["№", "Туман", "Массив", "Фермер номи", type_label]
 
     image_bytes = build_table_image(
         title="📑 Шартномалар",
@@ -217,19 +220,21 @@ def aggregate_single_contract_type(data: list[dict]) -> list[dict]:
     for item in data:
         district = item.get("district") or "-"
         massive = item.get("massive") or "-"
-        key = (district, massive)
+        farmer_name = (item.get("farmer_name") or item.get("name") or "-").strip() or "-"
+        key = (district, massive, farmer_name)
 
         row = grouped.setdefault(
             key,
             {
                 "district": district,
                 "massive": massive,
+                "farmer_name": farmer_name,
                 "quantity": 0.0,
             },
         )
         row["quantity"] += to_float(item.get("quantity"))
 
-    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"]))
+    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"], row["farmer_name"]))
 
 
 def aggregate_all_contract_types(typed_data: dict[str, list[dict]]) -> list[dict]:
@@ -239,13 +244,15 @@ def aggregate_all_contract_types(typed_data: dict[str, list[dict]]) -> list[dict
         for item in rows:
             district = item.get("district") or "-"
             massive = item.get("massive") or "-"
-            key = (district, massive)
+            farmer_name = (item.get("farmer_name") or item.get("name") or "-").strip() or "-"
+            key = (district, massive, farmer_name)
 
             row = grouped.setdefault(
                 key,
                 {
                     "district": district,
                     "massive": massive,
+                    "farmer_name": farmer_name,
                     "futures": 0.0,
                     "forward": 0.0,
                     "storage": 0.0,
@@ -256,7 +263,7 @@ def aggregate_all_contract_types(typed_data: dict[str, list[dict]]) -> list[dict
             row[contract_type] += quantity
             row["total"] += quantity
 
-    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"]))
+    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"], row["farmer_name"]))
 
 
 def build_all_contracts_totals(data: list[dict]) -> dict[str, float]:
