@@ -68,6 +68,7 @@ def build_table_image(
     columns: list[str],
     rows: list[list[str]],
     subtitle: str | None = None,
+    subtitle_alignment: str = "left",
     top_note: str | None = None,
     top_note_alignment: str = "left",
     top_note_color: str = _MUTED_TEXT,
@@ -132,7 +133,17 @@ def build_table_image(
     image_width = max(900, table_width + side_padding * 2)
 
     title_h = _text_size(draw, title, title_font)[1]
-    subtitle_h = _text_size(draw, subtitle or "", subtitle_font)[1] if subtitle else 0
+    subtitle_alignment = subtitle_alignment.lower()
+    if subtitle_alignment not in {"left", "center", "right"}:
+        raise ValueError("subtitle_alignment must be left, center or right")
+
+    subtitle_lines = subtitle.splitlines() if subtitle else []
+    subtitle_line_h = _text_size(draw, "Ag", subtitle_font)[1] if subtitle else 0
+    subtitle_h = (
+        len(subtitle_lines) * subtitle_line_h + (len(subtitle_lines) - 1) * 8
+        if subtitle_lines
+        else 0
+    )
     top_note_h = _text_size(draw, top_note or "", top_note_font)[1] if top_note else 0
 
     top_note_alignment = top_note_alignment.lower()
@@ -156,8 +167,18 @@ def build_table_image(
 
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
     subtitle_y = top_pad + title_h + 8
-    if subtitle:
-        draw.text((side_padding, subtitle_y), subtitle, font=subtitle_font, fill=subtitle_color)
+    if subtitle_lines:
+        current_subtitle_y = subtitle_y
+        for subtitle_line in subtitle_lines:
+            line_w, _ = _text_size(draw, subtitle_line, subtitle_font)
+            if subtitle_alignment == "center":
+                subtitle_x = (image_width - line_w) / 2
+            elif subtitle_alignment == "right":
+                subtitle_x = image_width - side_padding - line_w
+            else:
+                subtitle_x = side_padding
+            draw.text((subtitle_x, current_subtitle_y), subtitle_line, font=subtitle_font, fill=subtitle_color)
+            current_subtitle_y += subtitle_line_h + 8
 
     if top_note:
         top_note_y = subtitle_y + (subtitle_h + 8 if subtitle else 0)
