@@ -71,6 +71,10 @@ def build_table_image(
     top_note: str | None = None,
     top_note_alignment: str = "left",
     top_note_color: str = _MUTED_TEXT,
+    top_note_right_padding: int | None = None,
+    subtitle_bold: bool = False,
+    subtitle_color: str = _MUTED_TEXT,
+    top_note_bold: bool = False,
     footer_lines: list[str] | None = None,
     equal_column_width: bool = False,
     column_width: int | None = None,
@@ -81,10 +85,12 @@ def build_table_image(
     from PIL import Image, ImageDraw
 
     title_font = _load_font(34, bold=True)
-    subtitle_font = _load_font(22)
+    subtitle_font = _load_font(22, bold=subtitle_bold)
     header_font = _load_font(23, bold=True)
     body_font = _load_font(22)
+    body_bold_font = _load_font(22, bold=True)
     footer_font = _load_font(21, bold=True)
+    top_note_font = _load_font(22, bold=top_note_bold)
 
     tmp = Image.new("RGB", (10, 10), _BG_COLOR)
     draw = ImageDraw.Draw(tmp)
@@ -127,7 +133,7 @@ def build_table_image(
 
     title_h = _text_size(draw, title, title_font)[1]
     subtitle_h = _text_size(draw, subtitle or "", subtitle_font)[1] if subtitle else 0
-    top_note_h = _text_size(draw, top_note or "", subtitle_font)[1] if top_note else 0
+    top_note_h = _text_size(draw, top_note or "", top_note_font)[1] if top_note else 0
 
     top_note_alignment = top_note_alignment.lower()
     if top_note_alignment not in {"left", "center", "right"}:
@@ -151,18 +157,19 @@ def build_table_image(
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
     subtitle_y = top_pad + title_h + 8
     if subtitle:
-        draw.text((side_padding, subtitle_y), subtitle, font=subtitle_font, fill=_MUTED_TEXT)
+        draw.text((side_padding, subtitle_y), subtitle, font=subtitle_font, fill=subtitle_color)
 
     if top_note:
         top_note_y = subtitle_y + (subtitle_h + 8 if subtitle else 0)
-        top_note_w, _ = _text_size(draw, top_note, subtitle_font)
+        top_note_w, _ = _text_size(draw, top_note, top_note_font)
+        right_padding = side_padding if top_note_right_padding is None else max(0, top_note_right_padding)
         if top_note_alignment == "right":
-            top_note_x = image_width - side_padding - top_note_w
+            top_note_x = image_width - right_padding - top_note_w
         elif top_note_alignment == "center":
             top_note_x = (image_width - top_note_w) / 2
         else:
             top_note_x = side_padding
-        draw.text((top_note_x, top_note_y), top_note, font=subtitle_font, fill=top_note_color)
+        draw.text((top_note_x, top_note_y), top_note, font=top_note_font, fill=top_note_color)
 
     x = side_padding
     y = table_top
@@ -192,10 +199,12 @@ def build_table_image(
         for row_idx, row in enumerate(padded_rows):
             row_bg = _ROW_ALT if row_idx % 2 == 0 else _CARD_COLOR
             draw.rectangle((x, y, x + table_width, y + row_h), fill=row_bg)
+            is_total_row = any((str(cell).strip().upper() == "ЖАМИ") for cell in row)
+            row_font = body_bold_font if is_total_row else body_font
             cursor_x = x
             for col_idx, width in enumerate(col_widths):
                 cell = row[col_idx] if col_idx < len(row) else ""
-                cell_w, _ = _text_size(draw, cell, body_font)
+                cell_w, _ = _text_size(draw, cell, row_font)
                 if alignments[col_idx] == "center":
                     text_x = cursor_x + (width - cell_w) / 2
                 elif alignments[col_idx] == "right":
@@ -203,7 +212,7 @@ def build_table_image(
                 else:
                     text_x = cursor_x + 16
 
-                draw.text((text_x, y + cell_padding_y), cell, font=body_font, fill=_TEXT_COLOR)
+                draw.text((text_x, y + cell_padding_y), cell, font=row_font, fill=_TEXT_COLOR)
                 cursor_x += width
             draw.line((x, y + row_h, x + table_width, y + row_h), fill=_BORDER, width=1)
             y += row_h
