@@ -423,7 +423,7 @@ async def _send_warehouse_movements_page(
 
     subtitle = (
         f"Омбор: {warehouse_name}  |  Маҳсулот: {product_name}"[:140]
-        + "\n"
+        + "\n\n"
         + (
             f"Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)}  |  "
             f"Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)}  |  "
@@ -508,7 +508,7 @@ async def _send_warehouse_movements_page(
         subtitle_color="#0b1f44",
         subtitle_alignment="left",
         top_note=f"Сана: {date.today().strftime('%d.%m.%Y')}",
-        top_note_alignment="left",
+        top_note_alignment="right",
         top_note_right_padding=70,
         top_note_bold=True,
         top_note_color="#d62828",
