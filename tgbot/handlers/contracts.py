@@ -114,6 +114,9 @@ async def send_page(target, page, district_index, contract_type, edit):
             ]
         )
         columns = ["№", "Туман", "Массив", "Фермер номи", "Фючерс", "Форвард", "Сақлаш", "Жами"]
+        column_widths = [80, 160, 160, 320, 170, 170, 170, 170]
+        column_alignments = ["center", "left", "left", "left", "center", "center", "center", "center"]
+        min_rows = PER_PAGE + 1
     else:
         type_label = CONTRACT_TYPE_LABELS.get(contract_type, "Миқдор")
         rows = [
@@ -126,13 +129,24 @@ async def send_page(target, page, district_index, contract_type, edit):
             ]
             for index, contract in enumerate(page_data, start=start + 1)
         ]
+        total_quantity = sum(to_float(item.get("quantity")) for item in filtered_data)
+        rows.append(["", "", "", "Жами", format_tons(total_quantity)])
         columns = ["№", "Туман", "Массив", "Фермер номи", type_label]
+        column_widths = [80, 160, 160, 320, 170]
+        column_alignments = ["center", "left", "left", "left", "center"]
+        min_rows = PER_PAGE + 1
 
     image_bytes = build_table_image(
         title="📑 Шартномалар",
         subtitle=f"Тури: {type_title} | Туман: {district_title}",
+        top_note="Минг тоннада",
+        top_note_alignment="right",
+        top_note_color="#d62828",
         columns=columns,
+        column_widths=column_widths,
+        column_alignments=column_alignments,
         rows=rows,
+        min_rows=min_rows,
     )
 
     keyboard = contracts_pagination_keyboard(page, end < len(filtered_data), district_index, contract_type)
@@ -291,4 +305,4 @@ def to_float(value) -> float:
 
 
 def format_tons(value) -> str:
-    return f"{to_float(value) / 1_000:,.1f}"
+    return f"{to_float(value) / 1_000:,.1f}".replace(",", " ").replace(".", ",")
