@@ -109,6 +109,37 @@ def _report_rows_by_district(items: list[dict]) -> list[dict]:
     return sorted(district_totals.values(), key=lambda row: row["district_name"])
 
 
+def _aggregate_expense_rows_by_farmer(items: list[dict]) -> list[dict]:
+    grouped: dict[tuple[str, str, str, str], dict] = {}
+
+    for item in items:
+        district_name = (item.get("district_name") or "-").strip() or "-"
+        massive_name = (item.get("massive_name") or "-").strip() or "-"
+        farmer_name = (item.get("farmer_name") or "-").strip() or "-"
+        product_name = (item.get("product_name") or "-").strip() or "-"
+
+        key = (district_name, massive_name, farmer_name, product_name)
+        quantity = float(item.get("quantity") or 0)
+
+        row = grouped.setdefault(
+            key,
+            {
+                "district_name": district_name,
+                "massive_name": massive_name,
+                "farmer_name": farmer_name,
+                "product_name": product_name,
+                "quantity": 0.0,
+                "quantity_per_area": float(item.get("quantity_per_area") or 0),
+            },
+        )
+        row["quantity"] += quantity
+
+    return sorted(
+        grouped.values(),
+        key=lambda row: (row["district_name"], row["massive_name"], row["farmer_name"], row["product_name"]),
+    )
+
+
 async def _warehouse_map():
     warehouses = await get_warehouses()
     return {
@@ -424,19 +455,18 @@ async def _send_warehouse_movements_page(
         ]
         column_alignments = ["center", "center", "left", "center", "center", "center", "left"]
     elif movement == "out":
-        expense_rows = movements
+        expense_rows = _aggregate_expense_rows_by_farmer(movements)
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
-        columns = ["№", "Туман", "Массив", "Фермер номи", "Юк-хати №", "Маҳсулот", "Миқдори", "Га/кг"]
-        column_widths = [70, 220, 220, 260, 170, 220, 170, 150]
-        column_alignments = ["center", "left", "left", "left", "center", "left", "center", "center"]
+        columns = ["№", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори", "Га/кг"]
+        column_widths = [70, 230, 220, 280, 220, 170, 150]
+        column_alignments = ["center", "left", "left", "left", "left", "center", "center"]
         rows = [
             [
                 str(index),
                 (item.get("district_name") or "-")[:16],
                 (item.get("massive_name") or "-")[:16],
                 (item.get("farmer_name") or "-")[:20],
-                str(item.get("number") or "-"),
                 (item.get("product_name") or "-")[:16],
                 _format_number_with_spaces(item.get("quantity") or 0),
                 (

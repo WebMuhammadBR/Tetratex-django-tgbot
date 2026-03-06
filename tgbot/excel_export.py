@@ -164,6 +164,33 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
     if not data:
         return None
 
+    if mode == "out":
+        grouped: dict[tuple[str, str, str, str], dict] = {}
+        for item in data:
+            district = (item.get("district_name") or "-").strip() or "-"
+            massive = (item.get("massive_name") or "-").strip() or "-"
+            farmer = (item.get("farmer_name") or "-").strip() or "-"
+            product = (item.get("product_name") or "-").strip() or "-"
+            key = (district, massive, farmer, product)
+
+            row = grouped.setdefault(
+                key,
+                {
+                    "district_name": district,
+                    "massive_name": massive,
+                    "farmer_name": farmer,
+                    "product_name": product,
+                    "quantity": 0.0,
+                    "quantity_per_area": float(item.get("quantity_per_area") or 0),
+                },
+            )
+            row["quantity"] += float(item.get("quantity") or 0)
+
+        data = sorted(
+            grouped.values(),
+            key=lambda row: (row["district_name"], row["massive_name"], row["farmer_name"], row["product_name"]),
+        )
+
     formatted = []
     for index, item in enumerate(data, start=1):
         if mode == "report":
@@ -183,7 +210,6 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
                 "Туман": item.get("district_name") or "-",
                 "Массив": item.get("massive_name") or "-",
                 "Фермер номи": item.get("farmer_name") or "-",
-                "Юк-хати №": item.get("number") or "-",
                 "Маҳсулот": item.get("product_name") or "-",
                 "Миқдори": float(item.get("quantity") or 0),
                 "Га/кг": round(float(item.get("quantity_per_area") or 0)),
