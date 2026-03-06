@@ -69,6 +69,7 @@ def build_table_image(
     rows: list[list[str]],
     subtitle: str | None = None,
     top_note: str | None = None,
+    top_note_alignment: str = "left",
     top_note_color: str = _MUTED_TEXT,
     footer_lines: list[str] | None = None,
     equal_column_width: bool = False,
@@ -127,6 +128,10 @@ def build_table_image(
     title_h = _text_size(draw, title, title_font)[1]
     subtitle_h = _text_size(draw, subtitle or "", subtitle_font)[1] if subtitle else 0
     top_note_h = _text_size(draw, top_note or "", subtitle_font)[1] if top_note else 0
+
+    top_note_alignment = top_note_alignment.lower()
+    if top_note_alignment not in {"left", "center", "right"}:
+        raise ValueError("top_note_alignment must be left, center or right")
     header_h = _text_size(draw, "Ag", header_font)[1] + cell_padding_y * 2
     row_h = _text_size(draw, "Ag", body_font)[1] + cell_padding_y * 2
     footer_h = (_text_size(draw, "Ag", footer_font)[1] + 12) * len(footer_lines or [])
@@ -150,7 +155,14 @@ def build_table_image(
 
     if top_note:
         top_note_y = subtitle_y + (subtitle_h + 8 if subtitle else 0)
-        draw.text((side_padding, top_note_y), top_note, font=subtitle_font, fill=top_note_color)
+        top_note_w, _ = _text_size(draw, top_note, subtitle_font)
+        if top_note_alignment == "right":
+            top_note_x = image_width - side_padding - top_note_w
+        elif top_note_alignment == "center":
+            top_note_x = (image_width - top_note_w) / 2
+        else:
+            top_note_x = side_padding
+        draw.text((top_note_x, top_note_y), top_note, font=subtitle_font, fill=top_note_color)
 
     x = side_padding
     y = table_top

@@ -14,7 +14,8 @@ PER_PAGE = 15
 
 def _format_amount(value) -> str:
     amount = float(value or 0)
-    return f"{amount:,.1f}".replace(",", " ").replace(".", ",")
+    amount_in_thousands = amount / 1000
+    return f"{amount_in_thousands:,.1f}".replace(",", " ").replace(".", ",")
 
 
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
@@ -109,7 +110,8 @@ async def send_page(target, page, district_index, edit):
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        top_note="Сўмда",
+        top_note="Минг сўмда",
+        top_note_alignment="right",
         top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,
