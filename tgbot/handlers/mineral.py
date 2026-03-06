@@ -1,4 +1,5 @@
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import BufferedInputFile, CallbackQuery, Message
 from datetime import date, datetime
 
@@ -28,6 +29,17 @@ USER_SELECTED_WAREHOUSE: dict[int, int] = {}
 WAREHOUSE_RECEIPT_NAMES = {"📥 Кирим", "kirim", "krim", "кирим"}
 WAREHOUSE_EXPENSE_NAMES = {"📤 Чиқим", "chiqim", "чиқим"}
 WAREHOUSE_REPORT_NAMES = {"📊 Свод", "svod", "свод"}
+
+
+async def _edit_message_content(message: Message, text: str, reply_markup=None):
+    if message.content_type == "photo":
+        try:
+            await message.edit_caption(caption=text, reply_markup=reply_markup)
+            return
+        except TelegramBadRequest:
+            pass
+
+    await message.edit_text(text, reply_markup=reply_markup)
 
 
 def _format_date_ddmmyyyy(value) -> str:
@@ -253,7 +265,8 @@ async def warehouse_back_sections_handler(callback: CallbackQuery):
     warehouse_map = await _warehouse_map()
     warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
 
-    await callback.message.edit_text(
+    await _edit_message_content(
+        callback.message,
         f"🏬 {warehouse_name}\nКеракли бўлимни танланг:\n\n📌 Кирим/Чиқимни пастдаги клавиатурадан танланг."
     )
     await callback.message.answer("Танланг 👇", reply_markup=warehouse_movement_menu())
@@ -295,7 +308,8 @@ async def warehouse_back_to_districts_handler(callback: CallbackQuery):
     else:
         title = "📤 Чиқим учун туманни танланг:"
 
-    await callback.message.edit_text(
+    await _edit_message_content(
+        callback.message,
         f"🏬 {warehouse_name}\n{title}",
         reply_markup=warehouse_expense_districts_inline_keyboard(warehouse_id, districts, section=section),
     )
@@ -507,11 +521,11 @@ async def _send_warehouse_products_page(message, warehouse_id: int, movement: st
 
     if not products:
         if movement == "in":
-            await message.edit_text(f"🏬 {warehouse_name}\n\n📥 Кирим бўйича маълумот топилмади.")
+            await _edit_message_content(message, f"🏬 {warehouse_name}\n\n📥 Кирим бўйича маълумот топилмади.")
         elif movement == "out":
-            await message.edit_text(f"🏬 {warehouse_name}\n\n📤 Чиқим бўйича маълумот топилмади.")
+            await _edit_message_content(message, f"🏬 {warehouse_name}\n\n📤 Чиқим бўйича маълумот топилмади.")
         else:
-            await message.edit_text(f"🏬 {warehouse_name}\n\n📊 Свод бўйича маълумот топилмади.")
+            await _edit_message_content(message, f"🏬 {warehouse_name}\n\n📊 Свод бўйича маълумот топилмади.")
         return
 
     movement_token = "in"
@@ -531,7 +545,8 @@ async def _send_warehouse_products_page(message, warehouse_id: int, movement: st
 
     section_title = "📥 Кирим" if movement == "in" else ("📤 Чиқим" if movement == "out" else "📊 Свод")
 
-    await message.edit_text(
+    await _edit_message_content(
+        message,
         f"🏬 {warehouse_name}\n{section_title} учун маҳсулотни танланг:",
         reply_markup=warehouse_products_inline_keyboard(
             warehouse_id,
