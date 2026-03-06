@@ -422,10 +422,13 @@ async def _send_warehouse_movements_page(
     page_items = movements[start:end]
 
     subtitle = (
-        f"Омбор: {warehouse_name}\nМахсулот:{product_name}\n"
-        f"Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)} \n"
-        f"Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)} \n"
-        f"Қолдиқ: {_format_number_with_spaces(totals.get('balance', 0), digits=2)}"
+        f"Омбор: {warehouse_name}  |  Маҳсулот: {product_name}"[:140]
+        + "\n"
+        + (
+            f"Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)}  |  "
+            f"Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)}  |  "
+            f"Қолдиқ: {_format_number_with_spaces(totals.get('balance', 0), digits=2)}"
+        )
     )
 
     footer_lines = None
@@ -503,6 +506,7 @@ async def _send_warehouse_movements_page(
         subtitle=subtitle,
         subtitle_bold=True,
         subtitle_color="#0b1f44",
+        subtitle_alignment="center",
         top_note=f"Сана: {date.today().strftime('%d.%m.%Y')}",
         top_note_alignment="right",
         top_note_right_padding=70,
