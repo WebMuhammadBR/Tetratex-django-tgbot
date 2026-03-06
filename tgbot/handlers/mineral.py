@@ -439,7 +439,12 @@ async def _send_warehouse_movements_page(
                 str(item.get("number") or "-"),
                 (item.get("product_name") or "-")[:16],
                 _format_number_with_spaces(item.get("quantity") or 0),
-                _format_number_with_spaces(item.get("quantity_per_area") or 0),
+                (
+                    _format_number_with_spaces(item.get("quantity_per_area") or 0),
+                    "#d62828",
+                )
+                if float(item.get("quantity_per_area") or 0) > 302
+                else _format_number_with_spaces(item.get("quantity_per_area") or 0),
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
