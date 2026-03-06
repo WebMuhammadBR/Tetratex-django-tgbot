@@ -111,7 +111,7 @@ async def send_page(target, page, district_index, edit):
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
         top_note="Минг сўмда",
-        top_note_alignment="right",
+        top_note_alignment="left",
         top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,
