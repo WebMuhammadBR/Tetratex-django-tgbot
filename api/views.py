@@ -339,6 +339,8 @@ class WarehouseMovementsAPIView(APIView):
                 "id",
                 "date",
                 "number",
+                "farmer__massive__district__name",
+                "farmer__massive__name",
                 "farmer__name",
                 "farmer__maydon",
                 "items__product_id",
@@ -349,7 +351,7 @@ class WarehouseMovementsAPIView(APIView):
         )
 
         result = []
-        for index, row in enumerate(rows, start=1):
+        for row in rows:
             maydon = row.get("farmer__maydon") or Decimal("0.00")
             quantity = row.get("quantity") or Decimal("0.00")
             quantity_per_area = Decimal("0.00")
@@ -358,10 +360,12 @@ class WarehouseMovementsAPIView(APIView):
 
             result.append(
                 {
-                    "id": index,
+                    "id": row.get("id"),
                     "date": row.get("date"),
                     "warehouse_name": None,
                     "number": row.get("number") or "-",
+                    "district_name": row.get("farmer__massive__district__name") or "-",
+                    "massive_name": row.get("farmer__massive__name") or "-",
                     "farmer_name": row.get("farmer__name") or "-",
                     "product_id": row.get("items__product_id"),
                     "product_name": row.get("items__product__name") or "-",

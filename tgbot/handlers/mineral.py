@@ -109,35 +109,6 @@ def _report_rows_by_district(items: list[dict]) -> list[dict]:
     return sorted(district_totals.values(), key=lambda row: row["district_name"])
 
 
-def _expense_rows_by_farmer(items: list[dict]) -> list[dict]:
-    farmer_totals: dict[str, dict] = {}
-
-    for item in items:
-        farmer_name = (item.get("farmer_name") or "-").strip() or "-"
-        quantity = float(item.get("quantity") or 0)
-        maydon = float(item.get("maydon") or 0)
-
-        record = farmer_totals.setdefault(
-            farmer_name,
-            {
-                "farmer_name": farmer_name,
-                "quantity": 0.0,
-                "maydon": maydon,
-            },
-        )
-        record["quantity"] += quantity
-
-        if record.get("maydon", 0) <= 0 and maydon > 0:
-            record["maydon"] = maydon
-
-    rows = sorted(farmer_totals.values(), key=lambda row: row["farmer_name"])
-    for row in rows:
-        maydon = row.get("maydon") or 0
-        row["quantity_per_area"] = (row["quantity"] / maydon) if maydon > 0 else 0.0
-
-    return rows
-
-
 async def _warehouse_map():
     warehouses = await get_warehouses()
     return {
@@ -453,16 +424,20 @@ async def _send_warehouse_movements_page(
         ]
         column_alignments = ["center", "center", "left", "center", "center", "center", "left"]
     elif movement == "out":
-        expense_rows = _expense_rows_by_farmer(movements)
+        expense_rows = movements
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
-        columns = ["№", "Фермер номи", "Миқдори", "Га/кг"]
-        column_widths = [80, 340, 180, 180]
-        column_alignments = ["center", "left", "center", "center"]
+        columns = ["№", "Туман", "Массив", "Фермер номи", "Юк-хати №", "Маҳсулот", "Миқдори", "Га/кг"]
+        column_widths = [70, 220, 220, 260, 170, 220, 170, 150]
+        column_alignments = ["center", "left", "left", "left", "center", "left", "center", "center"]
         rows = [
             [
                 str(index),
-                (item.get("farmer_name") or "-")[:24],
+                (item.get("district_name") or "-")[:16],
+                (item.get("massive_name") or "-")[:16],
+                (item.get("farmer_name") or "-")[:20],
+                str(item.get("number") or "-"),
+                (item.get("product_name") or "-")[:16],
                 _format_number_with_spaces(item.get("quantity") or 0),
                 _format_number_with_spaces(item.get("quantity_per_area") or 0),
             ]

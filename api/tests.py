@@ -87,6 +87,37 @@ class WarehouseReportMovementsAPITest(TestCase):
         self.assertEqual(quantities_by_date[today], Decimal("200.00"))
         self.assertEqual(quantities_by_date[previous_day], Decimal("400.00"))
 
+    def test_out_movements_include_district_massive_and_farmer_fields(self):
+        doc = GoodsGivenDocument.objects.create(
+            date="2026-02-02",
+            number="YH-10",
+            farmer=self.farmer,
+            contract=self.contract,
+            warehouse=self.warehouse,
+        )
+        GoodsGivenItem.objects.create(
+            document=doc,
+            product=self.product,
+            quantity=Decimal("250.00"),
+            price=Decimal("1.00"),
+        )
+
+        response = self.client.get(
+            "/api/warehouse/movements/",
+            {
+                "movement": "out",
+                "warehouse_id": self.warehouse.id,
+                "product_id": self.product.id,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["district_name"], "Yangiyul")
+        self.assertEqual(response.data[0]["massive_name"], "Massiv-1")
+        self.assertEqual(response.data[0]["farmer_name"], "Farmer 1")
+        self.assertEqual(response.data[0]["number"], "YH-10")
+
 
 class WarehouseReceiptMovementsAPITest(TestCase):
     def setUp(self):
