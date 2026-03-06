@@ -413,6 +413,8 @@ async def _send_warehouse_movements_page(
     if movement == "in":
         table_title = "📥 Кирим деталлари"
         columns = ["Сана", "Юк-№", "Қоп", "Миқдори"]
+        column_widths = [180, 220, 150, 200]
+        column_alignments = ["center", "center", "center", "center"]
         rows = [
             [
                 _format_date_ddmmyyyy(item.get("date")),
@@ -427,6 +429,8 @@ async def _send_warehouse_movements_page(
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
         columns = ["№", "Фермер номи", "Миқдори", "Га/кг"]
+        column_widths = [80, 340, 180, 180]
+        column_alignments = ["center", "left", "center", "center"]
         rows = [
             [
                 str(index),
@@ -444,6 +448,8 @@ async def _send_warehouse_movements_page(
 
         table_title = "📊 Свод деталлари"
         columns = ["№", "Туман", f"Бир кунда ({date.today().strftime('%d.%m.%Y')})", "Мавсумда"]
+        column_widths = [80, 260, 250, 210]
+        column_alignments = ["center", "left", "center", "center"]
         rows = [
             [
                 str(index),
@@ -461,8 +467,14 @@ async def _send_warehouse_movements_page(
     image_bytes = build_table_image(
         title=table_title,
         subtitle=subtitle,
+        top_note="Килограммда",
+        top_note_alignment="right",
+        top_note_color="#d62828",
         columns=columns,
+        column_widths=column_widths,
+        column_alignments=column_alignments,
         rows=rows,
+        min_rows=PER_PAGE,
         footer_lines=footer_lines,
     )
 
