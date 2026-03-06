@@ -49,7 +49,7 @@ class FarmerListAPIView(APIView):
             GoodsGivenItem.objects
             .filter(document__farmer_id__in=[farmer.id for farmer in farmers])
             .values("document__farmer_id", "product__name")
-            .annotate(total_amount=Coalesce(Sum("amount"), Decimal("0.00")))
+            .annotate(total_amount=Coalesce(Sum("total_with_vat"), Decimal("0.00")))
         )
 
         for row in totals_rows:

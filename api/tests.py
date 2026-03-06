@@ -287,10 +287,10 @@ class FarmerListProductTotalsAPITest(TestCase):
         self.assertEqual(len(response.data), 2)
 
         item = next(row for row in response.data if row['name'] == 'Farmer Totals')
-        self.assertEqual(Decimal(str(item['product_totals']['Ammofos'])), Decimal('200.00'))
-        self.assertEqual(Decimal(str(item['product_totals']['Karbamid'])), Decimal('150.00'))
+        self.assertEqual(Decimal(str(item['product_totals']['Ammofos'])), Decimal('224.00'))
+        self.assertEqual(Decimal(str(item['product_totals']['Karbamid'])), Decimal('168.00'))
         self.assertEqual(Decimal(str(item['product_totals']['Selitra'])), Decimal('0.00'))
-        self.assertEqual(Decimal(str(item['farmer_total_amount'])), Decimal('350.00'))
+        self.assertEqual(Decimal(str(item['farmer_total_amount'])), Decimal('392.00'))
 
     def test_list_contains_all_active_products_with_zero_for_missing_items(self):
         response = self.client.get('/api/farmers/')
