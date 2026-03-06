@@ -12,13 +12,9 @@ router = Router()
 PER_PAGE = 15
 
 
-def _as_thousand_amount(value) -> float:
+def _format_amount(value) -> str:
     amount = float(value or 0)
-    return round(amount / 1000, 1)
-
-
-def _format_thousand_amount(value) -> str:
-    return f"{_as_thousand_amount(value):.1f}".replace(".", ",")
+    return f"{amount:,.1f}".replace(",", " ").replace(".", ",")
 
 
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
@@ -40,8 +36,8 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
             farmer.get("massive") or "-",
             farmer.get("name") or "-",
         ]
-        row.extend(_format_thousand_amount(product_totals.get(product_name)) for product_name in product_names)
-        row.append(_format_thousand_amount(farmer.get("farmer_total_amount")))
+        row.extend(_format_amount(product_totals.get(product_name)) for product_name in product_names)
+        row.append(_format_amount(farmer.get("farmer_total_amount")))
         rows.append(row)
 
     return product_names, rows
@@ -104,16 +100,16 @@ async def send_page(target, page, district_index, edit):
     totals_by_product = []
     for product_name in product_names:
         total_value = sum(float((item.get("product_totals") or {}).get(product_name) or 0) for item in filtered_data)
-        totals_by_product.append(_format_thousand_amount(total_value))
+        totals_by_product.append(_format_amount(total_value))
 
     grand_total = sum(float(item.get("farmer_total_amount") or 0) for item in filtered_data)
 
-    rows.append(["", "", "", "Жами", *totals_by_product, _format_thousand_amount(grand_total)])
+    rows.append(["", "", "", "Жами", *totals_by_product, _format_amount(grand_total)])
 
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        top_note="Минг сўмда",
+        top_note="Сўмда",
         top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,
