@@ -85,20 +85,50 @@ async def send_page(target, page, district_index, contract_type, edit):
     district_title = "Ҳаммаси" if district == "all" else district
     type_title = CONTRACT_TYPE_LABELS.get(contract_type, "Ҳаммаси")
 
-    rows = [
-        [
-            str(index),
-            contract["name"][:24],
-            f"{float(contract['quantity']) / 1_000:,.1f}",
-            f"{float(contract['amount']) / 1_000_000:,.1f}",
+    if contract_type == CONTRACT_TYPE_ALL:
+        rows = [
+            [
+                str(index),
+                contract["district"],
+                contract["massive"],
+                format_tons(contract["futures"]),
+                format_tons(contract["forward"]),
+                format_tons(contract["storage"]),
+                format_tons(contract["total"]),
+            ]
+            for index, contract in enumerate(page_data, start=start + 1)
         ]
-        for index, contract in enumerate(page_data, start=start + 1)
-    ]
+
+        totals = build_all_contracts_totals(filtered_data)
+        rows.append(
+            [
+                "",
+                "",
+                "Жами",
+                format_tons(totals["futures"]),
+                format_tons(totals["forward"]),
+                format_tons(totals["storage"]),
+                format_tons(totals["total"]),
+            ]
+        )
+        columns = ["№", "Туман", "Массив", "Фючерс", "Форвард", "Сақлаш", "Жами"]
+    else:
+        type_label = CONTRACT_TYPE_LABELS.get(contract_type, "Миқдор")
+        rows = [
+            [
+                str(index),
+                contract["district"],
+                contract["massive"],
+                format_tons(contract["quantity"]),
+            ]
+            for index, contract in enumerate(page_data, start=start + 1)
+        ]
+        columns = ["№", "Туман", "Массив", type_label]
 
     image_bytes = build_table_image(
         title="📑 Шартномалар",
         subtitle=f"Тури: {type_title} | Туман: {district_title}",
-        columns=["№", "Фермер номи", "Миқдор (тн)", "Сумма (млн)"],
+        columns=columns,
         rows=rows,
     )
 
@@ -135,8 +165,13 @@ async def contracts_excel(callback: CallbackQuery):
 
 async def get_contracts_data(contract_type: str):
     if contract_type == CONTRACT_TYPE_ALL:
-        return await get_contracts_summary()
-    return await get_contracts_summary(contract_type=contract_type)
+        typed_data = {}
+        for contract_key in ("futures", "forward", "storage"):
+            typed_data[contract_key] = await get_contracts_summary(contract_type=contract_key)
+        return aggregate_all_contract_types(typed_data)
+
+    data = await get_contracts_summary(contract_type=contract_type)
+    return aggregate_single_contract_type(data)
 
 
 async def get_contracts_excel_data(contract_type: str):
@@ -174,3 +209,79 @@ def get_district_by_index(districts: list[str], district_index: int) -> str:
     if district_pos >= len(districts):
         return "all"
     return districts[district_pos]
+
+
+def aggregate_single_contract_type(data: list[dict]) -> list[dict]:
+    grouped = {}
+
+    for item in data:
+        district = item.get("district") or "-"
+        massive = item.get("massive") or "-"
+        key = (district, massive)
+
+        row = grouped.setdefault(
+            key,
+            {
+                "district": district,
+                "massive": massive,
+                "quantity": 0.0,
+            },
+        )
+        row["quantity"] += to_float(item.get("quantity"))
+
+    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"]))
+
+
+def aggregate_all_contract_types(typed_data: dict[str, list[dict]]) -> list[dict]:
+    grouped = {}
+
+    for contract_type, rows in typed_data.items():
+        for item in rows:
+            district = item.get("district") or "-"
+            massive = item.get("massive") or "-"
+            key = (district, massive)
+
+            row = grouped.setdefault(
+                key,
+                {
+                    "district": district,
+                    "massive": massive,
+                    "futures": 0.0,
+                    "forward": 0.0,
+                    "storage": 0.0,
+                    "total": 0.0,
+                },
+            )
+            quantity = to_float(item.get("quantity"))
+            row[contract_type] += quantity
+            row["total"] += quantity
+
+    return sorted(grouped.values(), key=lambda row: (row["district"], row["massive"]))
+
+
+def build_all_contracts_totals(data: list[dict]) -> dict[str, float]:
+    totals = {
+        "futures": 0.0,
+        "forward": 0.0,
+        "storage": 0.0,
+        "total": 0.0,
+    }
+
+    for item in data:
+        totals["futures"] += to_float(item.get("futures"))
+        totals["forward"] += to_float(item.get("forward"))
+        totals["storage"] += to_float(item.get("storage"))
+        totals["total"] += to_float(item.get("total"))
+
+    return totals
+
+
+def to_float(value) -> float:
+    try:
+        return float(value or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def format_tons(value) -> str:
+    return f"{to_float(value) / 1_000:,.1f}"
