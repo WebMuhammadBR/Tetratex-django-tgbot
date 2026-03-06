@@ -34,7 +34,8 @@ WAREHOUSE_REPORT_NAMES = {"📊 Свод", "svod", "свод"}
 async def _edit_message_content(message: Message, text: str, reply_markup=None):
     if message.content_type == "photo":
         try:
-            await message.edit_caption(caption=text, reply_markup=reply_markup)
+            await message.delete()
+            await message.answer(text, reply_markup=reply_markup)
             return
         except TelegramBadRequest:
             pass
