@@ -459,7 +459,7 @@ async def _send_warehouse_movements_page(
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
         columns = ["№", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори", "Га/кг"]
-        column_widths = [70, 230, 220, 280, 220, 170, 150]
+        column_widths = [70, 150, 160, 320, 180, 150, 150]
         column_alignments = ["center", "left", "left", "left", "left", "center", "center"]
         rows = [
             [
