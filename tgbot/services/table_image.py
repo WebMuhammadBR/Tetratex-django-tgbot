@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from io import BytesIO
 from pathlib import Path
+from typing import Any
 
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import BufferedInputFile, InputMediaPhoto
@@ -62,11 +63,17 @@ def _text_size(draw, text: str, font) -> tuple[int, int]:
     return right - left, bottom - top
 
 
+def _parse_cell(cell: Any) -> tuple[str, str | None]:
+    if isinstance(cell, tuple) and len(cell) == 2:
+        return str(cell[0]), str(cell[1])
+    return str(cell), None
+
+
 def build_table_image(
     *,
     title: str,
     columns: list[str],
-    rows: list[list[str]],
+    rows: list[list[Any]],
     subtitle: str | None = None,
     subtitle_alignment: str = "left",
     top_note: str | None = None,
@@ -101,7 +108,8 @@ def build_table_image(
         max_width, _ = _text_size(draw, col, header_font)
         for row in rows:
             cell = row[col_index] if col_index < len(row) else ""
-            cell_width, _ = _text_size(draw, cell, body_font)
+            cell_text, _ = _parse_cell(cell)
+            cell_width, _ = _text_size(draw, cell_text, body_font)
             max_width = max(max_width, cell_width)
         col_widths.append(max_width + 34)
 
@@ -233,7 +241,8 @@ def build_table_image(
             cursor_x = x
             for col_idx, width in enumerate(col_widths):
                 cell = row[col_idx] if col_idx < len(row) else ""
-                cell_w, _ = _text_size(draw, cell, row_font)
+                cell_text, cell_color = _parse_cell(cell)
+                cell_w, _ = _text_size(draw, cell_text, row_font)
                 if alignments[col_idx] == "center":
                     text_x = cursor_x + (width - cell_w) / 2
                 elif alignments[col_idx] == "right":
@@ -241,7 +250,7 @@ def build_table_image(
                 else:
                     text_x = cursor_x + 16
 
-                draw.text((text_x, y + cell_padding_y), cell, font=row_font, fill=_TEXT_COLOR)
+                draw.text((text_x, y + cell_padding_y), cell_text, font=row_font, fill=cell_color or _TEXT_COLOR)
                 cursor_x += width
             draw.line((x, y + row_h, x + table_width, y + row_h), fill=_BORDER, width=1)
             y += row_h
