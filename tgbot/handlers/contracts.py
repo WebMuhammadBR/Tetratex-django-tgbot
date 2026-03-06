@@ -140,7 +140,7 @@ async def send_page(target, page, district_index, contract_type, edit):
         title="📑 Шартномалар",
         subtitle=f"Тури: {type_title} | Туман: {district_title}",
         top_note="тоннада",
-        top_note_alignment="right",
+        top_note_alignment="left",
         top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,

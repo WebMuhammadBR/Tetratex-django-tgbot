@@ -139,8 +139,10 @@ def build_table_image(
 
     subtitle_lines = subtitle.splitlines() if subtitle else []
     subtitle_line_h = _text_size(draw, "Ag", subtitle_font)[1] if subtitle else 0
+    subtitle_line_gap = 12
+    title_block_gap = 12
     subtitle_h = (
-        len(subtitle_lines) * subtitle_line_h + (len(subtitle_lines) - 1) * 8
+        len(subtitle_lines) * subtitle_line_h + (len(subtitle_lines) - 1) * subtitle_line_gap
         if subtitle_lines
         else 0
     )
@@ -154,8 +156,14 @@ def build_table_image(
     footer_h = (_text_size(draw, "Ag", footer_font)[1] + 12) * len(footer_lines or [])
 
     top_pad = 28
-    text_gap = 16
-    table_top = top_pad + title_h + (subtitle_h + 8 if subtitle else 0) + (top_note_h + 8 if top_note else 0) + text_gap
+    text_gap = 18
+    table_top = (
+        top_pad
+        + title_h
+        + (subtitle_h + title_block_gap if subtitle else 0)
+        + (top_note_h + title_block_gap if top_note else 0)
+        + text_gap
+    )
     row_count = max(1, len(rows), min_rows or 0)
     table_h = header_h + row_count * row_h
     image_height = table_top + table_h + footer_h + 44
@@ -166,7 +174,7 @@ def build_table_image(
     draw.rounded_rectangle((12, 12, image_width - 12, image_height - 12), radius=18, fill=_CARD_COLOR, outline=_BORDER, width=2)
 
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
-    subtitle_y = top_pad + title_h + 8
+    subtitle_y = top_pad + title_h + title_block_gap
     if subtitle_lines:
         current_subtitle_y = subtitle_y
         for subtitle_line in subtitle_lines:
@@ -178,10 +186,10 @@ def build_table_image(
             else:
                 subtitle_x = side_padding
             draw.text((subtitle_x, current_subtitle_y), subtitle_line, font=subtitle_font, fill=subtitle_color)
-            current_subtitle_y += subtitle_line_h + 8
+            current_subtitle_y += subtitle_line_h + subtitle_line_gap
 
     if top_note:
-        top_note_y = subtitle_y + (subtitle_h + 8 if subtitle else 0)
+        top_note_y = subtitle_y + (subtitle_h + title_block_gap if subtitle else 0)
         top_note_w, _ = _text_size(draw, top_note, top_note_font)
         right_padding = side_padding if top_note_right_padding is None else max(0, top_note_right_padding)
         if top_note_alignment == "right":
