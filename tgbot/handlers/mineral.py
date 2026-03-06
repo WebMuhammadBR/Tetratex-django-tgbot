@@ -422,10 +422,10 @@ async def _send_warehouse_movements_page(
     page_items = movements[start:end]
 
     subtitle = (
-        f"🏬 {warehouse_name} | 📦 {product_name}\n"
-        f"📥 Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)} | "
-        f"📤 Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)} | "
-        f"🧮 Қолдиқ: {_format_number_with_spaces(totals.get('balance', 0), digits=2)}"
+        f"Омбор: {warehouse_name}\nМахсулот:{product_name}\n"
+        f"Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)} \n"
+        f"Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)} \n"
+        f"Қолдиқ: {_format_number_with_spaces(totals.get('balance', 0), digits=2)}"
     )
 
     footer_lines = None
@@ -472,7 +472,7 @@ async def _send_warehouse_movements_page(
         total_today_quantity = sum(float(item.get("today_quantity") or 0) for item in report_rows)
         total_quantity = sum(float(item.get("total_quantity") or 0) for item in report_rows)
 
-        table_title = "📊 Свод деталлари"
+        table_title = "Свод деталлари"
         columns = ["№", "Туман", "Бир кунда ", "Мавсумда"]
         column_widths = [100, 300, 290, 250]
         column_alignments = ["center", "left", "center", "center"]
