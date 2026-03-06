@@ -84,6 +84,11 @@ def _date_key(value) -> str:
     return date_text[:10]
 
 
+def _format_number_with_spaces(value, digits: int = 0) -> str:
+    formatted = f"{float(value or 0):,.{digits}f}"
+    return formatted.replace(",", " ")
+
+
 def _report_rows_by_district(items: list[dict]) -> list[dict]:
     today_key = date.today().strftime("%Y-%m-%d")
     district_totals: dict[str, dict] = {}
@@ -416,9 +421,9 @@ async def _send_warehouse_movements_page(
 
     subtitle = (
         f"🏬 {warehouse_name} | 📦 {product_name}\n"
-        f"📥 Кирим: {float(totals.get('total_in', 0)):.2f} | "
-        f"📤 Чиқим: {float(totals.get('total_out', 0)):.2f} | "
-        f"🧮 Қолдиқ: {float(totals.get('balance', 0)):.2f}"
+        f"📥 Кирим: {_format_number_with_spaces(totals.get('total_in', 0), digits=2)} | "
+        f"📤 Чиқим: {_format_number_with_spaces(totals.get('total_out', 0), digits=2)} | "
+        f"🧮 Қолдиқ: {_format_number_with_spaces(totals.get('balance', 0), digits=2)}"
     )
 
     footer_lines = None
@@ -436,8 +441,8 @@ async def _send_warehouse_movements_page(
                 str(item.get("invoice_number") or "-"),
                 str(item.get("product_name") or "-"),
                 str(item.get("transport_number") or "-"),
-                f"{int(item.get('bag_count') or 0)}",
-                f"{float(item.get('quantity') or 0):.0f}",
+                _format_number_with_spaces(item.get("bag_count") or 0),
+                _format_number_with_spaces(item.get("quantity") or 0),
                 str(item.get("warehouse_name") or "-"),
             ]
             for index, item in enumerate(page_items, start=start + 1)
@@ -454,8 +459,8 @@ async def _send_warehouse_movements_page(
             [
                 str(index),
                 (item.get("farmer_name") or "-")[:24],
-                f"{float(item.get('quantity') or 0):.0f}",
-                f"{float(item.get('quantity_per_area') or 0):.0f}",
+                _format_number_with_spaces(item.get("quantity") or 0),
+                _format_number_with_spaces(item.get("quantity_per_area") or 0),
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
@@ -473,14 +478,14 @@ async def _send_warehouse_movements_page(
             [
                 str(index),
                 (item.get("district_name") or "-")[:24],
-                f"{float(item.get('today_quantity') or 0):.0f}",
-                f"{float(item.get('total_quantity') or 0):.0f}",
+                _format_number_with_spaces(item.get("today_quantity") or 0),
+                _format_number_with_spaces(item.get("total_quantity") or 0),
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
         footer_lines = [
-            f"Жами бир кунда: {total_today_quantity:.0f}",
-            f"Жами мавсумда: {total_quantity:.0f}",
+            f"Жами бир кунда: {_format_number_with_spaces(total_today_quantity)}",
+            f"Жами мавсумда: {_format_number_with_spaces(total_quantity)}",
         ]
 
     image_bytes = build_table_image(
