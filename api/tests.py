@@ -6,7 +6,7 @@ from rest_framework.test import APIClient
 from query.models.bot import BotUser, BotUserActivity
 from query.models.contracts import Contract
 from query.models.counterparties import Farmer
-from query.models.documents import GoodsGivenDocument, GoodsGivenItem, Warehouse
+from query.models.documents import GoodsGivenDocument, GoodsGivenItem, MineralWarehouseReceipt, Warehouse
 from query.models.reference import District, Massive, Product, Region, Unit
 
 
@@ -86,6 +86,43 @@ class WarehouseReportMovementsAPITest(TestCase):
         quantities_by_date = {str(item["date"]): Decimal(str(item["quantity"])) for item in response.data}
         self.assertEqual(quantities_by_date[today], Decimal("200.00"))
         self.assertEqual(quantities_by_date[previous_day], Decimal("400.00"))
+
+
+class WarehouseReceiptMovementsAPITest(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+
+        unit = Unit.objects.create(name="Kilogram", short_name="kg")
+        self.product = Product.objects.create(name="Selitra", unit=unit)
+        self.warehouse = Warehouse.objects.create(name="Main Warehouse")
+
+    def test_in_movements_include_transport_and_warehouse(self):
+        MineralWarehouseReceipt.objects.create(
+            date="2026-03-01",
+            invoice_number="INV-777",
+            transport_type="truck",
+            transport_number="01A123BC",
+            bag_count=30,
+            product=self.product,
+            quantity=Decimal("1500.00"),
+            price=Decimal("100.00"),
+            warehouse=self.warehouse,
+        )
+
+        response = self.client.get(
+            "/api/warehouse/movements/",
+            {
+                "movement": "in",
+                "warehouse_id": self.warehouse.id,
+                "product_id": self.product.id,
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["invoice_number"], "INV-777")
+        self.assertEqual(response.data[0]["transport_number"], "01A123BC")
+        self.assertEqual(response.data[0]["warehouse_name"], "Main Warehouse")
 
 
 class BotUserActivityAnalyticsAPITest(TestCase):

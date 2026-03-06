@@ -427,18 +427,22 @@ async def _send_warehouse_movements_page(
 
     if movement == "in":
         table_title = "📥 Кирим деталлари"
-        columns = ["Сана", "Юк-№", "Қоп", "Миқдори"]
-        column_widths = [180, 220, 150, 200]
-        column_alignments = ["center", "center", "center", "center"]
+        columns = ["№", "Сана", "Юк-хати №", "Маҳсулот", "Транспорт №", "Қоп сони", "Миқдори", "Омбор"]
+        column_widths = [80, 150, 170, 200, 180, 150, 150, 190]
         rows = [
             [
+                str(index),
                 _format_date_ddmmyyyy(item.get("date")),
                 str(item.get("invoice_number") or "-"),
+                str(item.get("product_name") or "-"),
+                str(item.get("transport_number") or "-"),
                 f"{int(item.get('bag_count') or 0)}",
                 f"{float(item.get('quantity') or 0):.0f}",
+                str(item.get("warehouse_name") or "-"),
             ]
-            for item in page_items
+            for index, item in enumerate(page_items, start=start + 1)
         ]
+        column_alignments = ["center", "center", "center", "left", "center", "center", "center", "left"]
     elif movement == "out":
         expense_rows = _expense_rows_by_farmer(movements)
         page_items = expense_rows[start:end]
