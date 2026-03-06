@@ -501,8 +501,12 @@ async def _send_warehouse_movements_page(
     image_bytes = build_table_image(
         title=table_title,
         subtitle=subtitle,
+        subtitle_bold=True,
+        subtitle_color="#0b1f44",
         top_note=f"Сана: {date.today().strftime('%d.%m.%Y')}",
         top_note_alignment="right",
+        top_note_right_padding=70,
+        top_note_bold=True,
         top_note_color="#d62828",
         columns=columns,
         column_widths=column_widths,
