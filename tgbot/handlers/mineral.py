@@ -24,6 +24,7 @@ from services.api_client import (
 
 router = Router()
 PER_PAGE = 15
+REPORT_PER_PAGE = 6
 USER_SELECTED_WAREHOUSE: dict[int, int] = {}
 
 WAREHOUSE_RECEIPT_NAMES = {"📥 Кирим", "kirim", "krim", "кирим"}
@@ -415,8 +416,9 @@ async def _send_warehouse_movements_page(
         "Маҳсулот",
     )
 
-    start = (page - 1) * PER_PAGE
-    end = start + PER_PAGE
+    page_size = REPORT_PER_PAGE if movement == "report" else PER_PAGE
+    start = (page - 1) * page_size
+    end = start + page_size
     page_items = movements[start:end]
 
     subtitle = (
@@ -483,6 +485,14 @@ async def _send_warehouse_movements_page(
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
+        rows.append(
+            [
+                "",
+                "ЖАМИ",
+                _format_number_with_spaces(total_today_quantity),
+                _format_number_with_spaces(total_quantity),
+            ]
+        )
         footer_lines = [
             f"Жами бир кунда: {_format_number_with_spaces(total_today_quantity)}",
             f"Жами мавсумда: {_format_number_with_spaces(total_quantity)}",
@@ -498,7 +508,7 @@ async def _send_warehouse_movements_page(
         column_widths=column_widths,
         column_alignments=column_alignments,
         rows=rows,
-        min_rows=PER_PAGE,
+        min_rows=page_size,
         footer_lines=footer_lines,
     )
 
