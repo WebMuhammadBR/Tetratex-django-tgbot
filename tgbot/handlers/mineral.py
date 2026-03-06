@@ -23,7 +23,7 @@ from services.api_client import (
 )
 
 router = Router()
-PER_PAGE = 15
+PER_PAGE = 10
 REPORT_PER_PAGE = 6
 USER_SELECTED_WAREHOUSE: dict[int, int] = {}
 
@@ -501,14 +501,16 @@ async def _send_warehouse_movements_page(
             f"Жами мавсумда: {_format_number_with_spaces(total_quantity)}",
         ]
 
+    top_note = f"Сана: {date.today().strftime('%d.%m.%Y')}" if movement == "report" else None
+
     image_bytes = build_table_image(
         title=table_title,
         subtitle=subtitle,
         subtitle_bold=True,
         subtitle_color="#0b1f44",
         subtitle_alignment="left",
-        top_note=f"Сана: {date.today().strftime('%d.%m.%Y')}",
-        top_note_alignment="right",
+        top_note=top_note,
+        top_note_alignment="left",
         top_note_right_padding=70,
         top_note_bold=True,
         top_note_color="#d62828",
