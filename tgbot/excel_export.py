@@ -180,11 +180,12 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
         formatted.append(
             {
                 "№": index,
-                "Сана": _excel_date(item.get("date")),
-                "Ҳужжат №": item.get("number") or "-",
-                "Фермер": item.get("farmer_name") or "-",
+                "Туман": item.get("district_name") or "-",
+                "Массив": item.get("massive_name") or "-",
+                "Фермер номи": item.get("farmer_name") or "-",
+                "Юк-хати №": item.get("number") or "-",
                 "Маҳсулот": item.get("product_name") or "-",
-                "Миқдор": float(item.get("quantity") or 0),
+                "Миқдори": float(item.get("quantity") or 0),
                 "Га/кг": round(float(item.get("quantity_per_area") or 0)),
             }
         )
