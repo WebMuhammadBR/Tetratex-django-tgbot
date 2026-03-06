@@ -471,8 +471,8 @@ async def _send_warehouse_movements_page(
         total_quantity = sum(float(item.get("total_quantity") or 0) for item in report_rows)
 
         table_title = "📊 Свод деталлари"
-        columns = ["№", "Туман", f"Бир кунда ({date.today().strftime('%d.%m.%Y')})", "Мавсумда"]
-        column_widths = [80, 260, 250, 210]
+        columns = ["№", "Туман", "Бир кунда ", "Мавсумда"]
+        column_widths = [100, 300, 290, 250]
         column_alignments = ["center", "left", "center", "center"]
         rows = [
             [
@@ -491,7 +491,7 @@ async def _send_warehouse_movements_page(
     image_bytes = build_table_image(
         title=table_title,
         subtitle=subtitle,
-        top_note="Килограммда",
+        top_note=f"Сана: {date.today().strftime('%d.%m.%Y')}",
         top_note_alignment="right",
         top_note_color="#d62828",
         columns=columns,

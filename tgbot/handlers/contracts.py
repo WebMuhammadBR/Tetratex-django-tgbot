@@ -114,7 +114,7 @@ async def send_page(target, page, district_index, contract_type, edit):
             ]
         )
         columns = ["№", "Туман", "Массив", "Фермер номи", "Фючерс", "Форвард", "Сақлаш", "Жами"]
-        column_widths = [80, 160, 160, 320, 170, 170, 170, 170]
+        column_widths = [80, 160, 160, 380, 170, 170, 170, 170]
         column_alignments = ["center", "left", "left", "left", "center", "center", "center", "center"]
         min_rows = PER_PAGE + 1
     else:
@@ -132,14 +132,14 @@ async def send_page(target, page, district_index, contract_type, edit):
         total_quantity = sum(to_float(item.get("quantity")) for item in filtered_data)
         rows.append(["", "", "", "Жами", format_tons(total_quantity)])
         columns = ["№", "Туман", "Массив", "Фермер номи", type_label]
-        column_widths = [80, 160, 160, 320, 170]
+        column_widths = [120, 200, 200, 420, 210]
         column_alignments = ["center", "left", "left", "left", "center"]
         min_rows = PER_PAGE + 1
 
     image_bytes = build_table_image(
         title="📑 Шартномалар",
         subtitle=f"Тури: {type_title} | Туман: {district_title}",
-        top_note="Минг тоннада",
+        top_note="тоннада",
         top_note_alignment="right",
         top_note_color="#d62828",
         columns=columns,
