@@ -194,6 +194,15 @@ def _draw_branding(img, draw, *, side_padding: int, top_pad: int, image_width: i
     draw.text((text_x, text_y), _BRAND_TEXT, font=brand_font, fill=_TITLE_COLOR)
 
 
+def _branding_badge_height(draw) -> int:
+    qr_size = 92
+    brand_font = _fit_font_to_width(draw, _BRAND_TEXT, target_width=qr_size, max_size=30, min_size=10)
+    _, text_h = _text_size(draw, _BRAND_TEXT, brand_font)
+    box_padding_y = 10
+    gap = 8
+    return box_padding_y * 2 + qr_size + gap + text_h
+
+
 def build_table_image(
     *,
     title: str,
@@ -297,6 +306,10 @@ def build_table_image(
         + (top_note_h + title_block_gap if top_note else 0)
         + text_gap
     )
+
+    # Reserve space for the QR branding badge so it cannot overlap the table header.
+    branding_bottom = top_pad + _branding_badge_height(draw) + text_gap
+    table_top = max(table_top, branding_bottom)
     row_count = max(1, len(rows), min_rows or 0)
     table_h = header_h + row_count * row_h
     image_height = table_top + table_h + footer_h + 44
