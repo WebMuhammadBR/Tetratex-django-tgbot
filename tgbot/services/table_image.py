@@ -16,8 +16,8 @@ _TEXT_COLOR = "#102a43"
 _MUTED_TEXT = "#486581"
 _BORDER = "#d9e2ec"
 _ROW_ALT = "#f8fbff"
-_WATERMARK_TEXT = "t.me/TETRATEX_bot"
-_WATERMARK_COLOR = (31, 111, 235, 26)
+_BRAND_TEXT = "TETRATEX_bot"
+_BRAND_LINK = "https://t.me/TETRATEX_bot"
 
 _LOCAL_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
@@ -121,24 +121,68 @@ def _parse_cell(cell: Any) -> tuple[str, str | None]:
     return str(cell), None
 
 
-def _draw_watermark_pattern(img) -> None:
+def _build_qr_image(size: int):
     from PIL import Image, ImageDraw
 
-    watermark_font = _load_font(44, bold=True)
-    overlay = Image.new("RGBA", img.size, (255, 255, 255, 0))
-    overlay_draw = ImageDraw.Draw(overlay)
+    try:
+        import qrcode
 
-    text_w, text_h = _text_size(overlay_draw, _WATERMARK_TEXT, watermark_font)
-    step_x = max(360, text_w + 150)
-    step_y = max(280, text_h + 130)
+        qr = qrcode.QRCode(border=1, box_size=10)
+        qr.add_data(_BRAND_LINK)
+        qr.make(fit=True)
+        return qr.make_image(fill_color="black", back_color="white").convert("RGB").resize((size, size), Image.Resampling.NEAREST)
+    except ImportError:
+        fallback = Image.new("RGB", (size, size), "white")
+        fallback_draw = ImageDraw.Draw(fallback)
+        cell = max(4, size // 21)
 
-    for row_idx, y in enumerate(range(-180, img.height + step_y, step_y)):
-        shift_x = 0 if row_idx % 2 == 0 else step_x // 2
-        for x in range(-260 + shift_x, img.width + step_x, step_x):
-            overlay_draw.text((x, y), _WATERMARK_TEXT, font=watermark_font, fill=_WATERMARK_COLOR)
+        def square(x0: int, y0: int, cells: int):
+            fallback_draw.rectangle((x0, y0, x0 + cells * cell, y0 + cells * cell), outline="black", width=cell)
+            fallback_draw.rectangle(
+                (x0 + 2 * cell, y0 + 2 * cell, x0 + (cells - 2) * cell, y0 + (cells - 2) * cell),
+                fill="black",
+            )
 
-    rotated_overlay = overlay.rotate(22, resample=Image.Resampling.BICUBIC)
-    img.alpha_composite(rotated_overlay)
+        square(cell, cell, 7)
+        square(size - 8 * cell, cell, 7)
+        square(cell, size - 8 * cell, 7)
+
+        for y in range(10, 19, 2):
+            for x in range(10, 19, 2):
+                fallback_draw.rectangle((x * cell, y * cell, x * cell + cell, y * cell + cell), fill="black")
+
+        return fallback
+
+
+def _draw_branding(img, draw, *, side_padding: int, top_pad: int, image_width: int) -> None:
+    qr_size = 92
+    brand_font = _load_font(30, bold=True)
+    text_w, text_h = _text_size(draw, _BRAND_TEXT, brand_font)
+    box_padding_x = 16
+    box_padding_y = 10
+    gap = 12
+
+    badge_w = box_padding_x * 2 + qr_size + gap + text_w
+    badge_h = max(qr_size + box_padding_y * 2, text_h + box_padding_y * 2)
+    badge_x = image_width - side_padding - badge_w
+    badge_y = top_pad
+
+    draw.rounded_rectangle(
+        (badge_x, badge_y, badge_x + badge_w, badge_y + badge_h),
+        radius=14,
+        fill="#ffffff",
+        outline=_BORDER,
+        width=2,
+    )
+
+    qr_image = _build_qr_image(qr_size)
+    qr_x = badge_x + box_padding_x
+    qr_y = badge_y + (badge_h - qr_size) // 2
+    img.paste(qr_image, (qr_x, qr_y))
+
+    text_x = qr_x + qr_size + gap
+    text_y = badge_y + (badge_h - text_h) / 2
+    draw.text((text_x, text_y), _BRAND_TEXT, font=brand_font, fill=_TITLE_COLOR)
 
 
 def build_table_image(
@@ -252,7 +296,7 @@ def build_table_image(
     draw = ImageDraw.Draw(img)
 
     draw.rounded_rectangle((12, 12, image_width - 12, image_height - 12), radius=18, fill=_CARD_COLOR, outline=_BORDER, width=2)
-    _draw_watermark_pattern(img)
+    _draw_branding(img, draw, side_padding=side_padding, top_pad=top_pad, image_width=image_width)
 
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
     subtitle_y = top_pad + title_h + title_block_gap
