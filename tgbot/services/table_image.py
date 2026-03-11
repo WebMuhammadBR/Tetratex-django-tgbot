@@ -16,6 +16,8 @@ _TEXT_COLOR = "#102a43"
 _MUTED_TEXT = "#486581"
 _BORDER = "#d9e2ec"
 _ROW_ALT = "#f8fbff"
+_WATERMARK_TEXT = "t.me/TETRATEX_bot"
+_WATERMARK_COLOR = (31, 111, 235, 26)
 
 _LOCAL_FONTS_DIR = Path(__file__).resolve().parent.parent / "assets" / "fonts"
 
@@ -117,6 +119,26 @@ def _parse_cell(cell: Any) -> tuple[str, str | None]:
     if isinstance(cell, tuple) and len(cell) == 2:
         return str(cell[0]), str(cell[1])
     return str(cell), None
+
+
+def _draw_watermark_pattern(img) -> None:
+    from PIL import Image, ImageDraw
+
+    watermark_font = _load_font(44, bold=True)
+    overlay = Image.new("RGBA", img.size, (255, 255, 255, 0))
+    overlay_draw = ImageDraw.Draw(overlay)
+
+    text_w, text_h = _text_size(overlay_draw, _WATERMARK_TEXT, watermark_font)
+    step_x = max(360, text_w + 150)
+    step_y = max(280, text_h + 130)
+
+    for row_idx, y in enumerate(range(-180, img.height + step_y, step_y)):
+        shift_x = 0 if row_idx % 2 == 0 else step_x // 2
+        for x in range(-260 + shift_x, img.width + step_x, step_x):
+            overlay_draw.text((x, y), _WATERMARK_TEXT, font=watermark_font, fill=_WATERMARK_COLOR)
+
+    rotated_overlay = overlay.rotate(22, resample=Image.Resampling.BICUBIC)
+    img.alpha_composite(rotated_overlay)
 
 
 def build_table_image(
@@ -226,10 +248,11 @@ def build_table_image(
     table_h = header_h + row_count * row_h
     image_height = table_top + table_h + footer_h + 44
 
-    img = Image.new("RGB", (image_width, image_height), _BG_COLOR)
+    img = Image.new("RGBA", (image_width, image_height), _BG_COLOR)
     draw = ImageDraw.Draw(img)
 
     draw.rounded_rectangle((12, 12, image_width - 12, image_height - 12), radius=18, fill=_CARD_COLOR, outline=_BORDER, width=2)
+    _draw_watermark_pattern(img)
 
     draw.text((side_padding, top_pad), title, font=title_font, fill=_TITLE_COLOR)
     subtitle_y = top_pad + title_h + title_block_gap
@@ -317,7 +340,7 @@ def build_table_image(
             y += _text_size(draw, line, footer_font)[1] + 12
 
     buf = BytesIO()
-    img.save(buf, format="PNG", optimize=True)
+    img.convert("RGB").save(buf, format="PNG", optimize=True)
     return buf.getvalue()
 
 
