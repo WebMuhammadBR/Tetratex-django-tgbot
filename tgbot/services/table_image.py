@@ -115,6 +115,15 @@ def _text_size(draw, text: str, font) -> tuple[int, int]:
     return right - left, bottom - top
 
 
+def _fit_font_to_width(draw, text: str, *, target_width: int, max_size: int = 30, min_size: int = 10):
+    for size in range(max_size, min_size - 1, -1):
+        font = _load_font(size, bold=True)
+        width, _ = _text_size(draw, text, font)
+        if width <= target_width:
+            return font
+    return _load_font(min_size, bold=True)
+
+
 def _parse_cell(cell: Any) -> tuple[str, str | None]:
     if isinstance(cell, tuple) and len(cell) == 2:
         return str(cell[0]), str(cell[1])
@@ -156,14 +165,14 @@ def _build_qr_image(size: int):
 
 def _draw_branding(img, draw, *, side_padding: int, top_pad: int, image_width: int) -> None:
     qr_size = 92
-    brand_font = _load_font(30, bold=True)
+    brand_font = _fit_font_to_width(draw, _BRAND_TEXT, target_width=qr_size, max_size=30, min_size=10)
     text_w, text_h = _text_size(draw, _BRAND_TEXT, brand_font)
     box_padding_x = 16
     box_padding_y = 10
-    gap = 12
+    gap = 8
 
-    badge_w = box_padding_x * 2 + qr_size + gap + text_w
-    badge_h = max(qr_size + box_padding_y * 2, text_h + box_padding_y * 2)
+    badge_w = box_padding_x * 2 + qr_size
+    badge_h = box_padding_y * 2 + qr_size + gap + text_h
     badge_x = image_width - side_padding - badge_w
     badge_y = top_pad
 
@@ -176,12 +185,12 @@ def _draw_branding(img, draw, *, side_padding: int, top_pad: int, image_width: i
     )
 
     qr_image = _build_qr_image(qr_size)
-    qr_x = badge_x + box_padding_x
-    qr_y = badge_y + (badge_h - qr_size) // 2
+    qr_x = badge_x + (badge_w - qr_size) // 2
+    qr_y = badge_y + box_padding_y
     img.paste(qr_image, (qr_x, qr_y))
 
-    text_x = qr_x + qr_size + gap
-    text_y = badge_y + (badge_h - text_h) / 2
+    text_x = badge_x + (badge_w - text_w) / 2
+    text_y = qr_y + qr_size + gap
     draw.text((text_x, text_y), _BRAND_TEXT, font=brand_font, fill=_TITLE_COLOR)
 
 
