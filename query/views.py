@@ -20,7 +20,9 @@ def login_view(request):
             return render(request, "login/login.html", status=401)
 
         login(request, user)
-        if not remember_me:
+        if remember_me:
+            request.session.set_expiry(60 * 60 * 24 * 14)
+        else:
             request.session.set_expiry(0)
 
         return redirect("farmer_report")
