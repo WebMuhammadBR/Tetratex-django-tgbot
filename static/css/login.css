@@ -401,3 +401,16 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 37.5px #B6FF00;
   }
 }
+.login-message {
+  margin-bottom: 15px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  background: rgba(238, 0, 0, 0.2);
+  border: 1px solid #ee0000;
+  color: #fff;
+  line-height: 1.4;
+}
+
+input[type=submit]:disabled {
+  opacity: 0.8;
+}
