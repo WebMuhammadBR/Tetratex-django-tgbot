@@ -123,7 +123,7 @@ form h1 {
 }
 
 form h1 {
-  color: #FFbb00;
+  color: #0EE91B;
   font-family: Audiowide;
   font-weight: normal;
 }
@@ -200,11 +200,11 @@ label[for=remember] {
 }
 
 input[type=submit] {
-  background: #fb0;
+  background: #0EE91B;
   border: 1px solid rgba(0,0,0,0.4);
   border-radius: .3em;
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 10px 10px rgba(255,255,255,0.1);
-  color: #873C00;
+  color: #08340b;
   cursor: pointer;
   font-size: 13px;
   font-weight: bold;
@@ -234,14 +234,14 @@ label:hover ~ input[type=password] {
 
 input[type="checkbox"] {
   opacity: 0;
-  background: red;
   position: absolute;
   cursor: pointer;
-  z-index: 1;
+  z-index: 2;
   height: 100%;
   width: 100%;
   left: 0;
   top: 0;
+  margin: 0;
 }
 
 .checkboxouter {
@@ -261,17 +261,17 @@ input[type="checkbox"] {
   background-color: transparent;
   height: 10px;
   width: 5px;
-  margin: auto;
-  left: 50%;
+  left: 6px;
+  top: 1px;
   transform: rotate(45deg);
-  transform-origin: -35% 30%;
+  transform-origin: center;
   transition: all 0.2s;
 }
 
 input[type="checkbox"]:checked ~ .checkbox {
   transition: all 0.3s;
-  border-bottom: 2px solid #ffcc00;
-  border-right: 2px solid #ffcc00;
+  border-bottom: 2px solid #0EE91B;
+  border-right: 2px solid #0EE91B;
 }
 
 @keyframes neon {
@@ -280,11 +280,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   to {
@@ -292,11 +292,11 @@ input[type="checkbox"]:checked ~ .checkbox {
       0 0 3px #fff,
       0 0 7px  #fff,
       0 0 13px  #fff,
-      0 0 17px  #B6FF00,
-      0 0 33px  #B6FF00,
-      0 0 38px  #B6FF00,
-      0 0 48px #B6FF00,
-      0 0 63px #B6FF00;
+      0 0 17px  #0EE91B,
+      0 0 33px  #0EE91B,
+      0 0 38px  #0EE91B,
+      0 0 48px #0EE91B,
+      0 0 63px #0EE91B;
     }
 }
 
@@ -306,11 +306,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   2% {
@@ -322,11 +322,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   10% {
@@ -338,11 +338,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   22% {
@@ -354,11 +354,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   28% {
@@ -370,11 +370,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 
   34% {
@@ -394,11 +394,11 @@ input[type="checkbox"]:checked ~ .checkbox {
     0 0 2.5px #fff,
     0 0 5px #fff,
     0 0 7.5px #fff,
-    0 0 10px #B6FF00,
-    0 0 17.5px #B6FF00,
-    0 0 20px #B6FF00,
-    0 0 25px #B6FF00,
-    0 0 37.5px #B6FF00;
+    0 0 10px #0EE91B,
+    0 0 17.5px #0EE91B,
+    0 0 20px #0EE91B,
+    0 0 25px #0EE91B,
+    0 0 37.5px #0EE91B;
   }
 }
 .login-message {
