@@ -64,7 +64,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -143,6 +143,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [BASE_DIR / 'static']
 #STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 #STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
 STATICFILES_STORAGE = "whitenoise.storage.ManifestStaticFilesStorage"
@@ -173,3 +174,4 @@ SHORT_DATETIME_FORMAT = "d.m.Y H:i"
 
 DATE_INPUT_FORMATS = ["%d.%m.%Y"]
 DATETIME_INPUT_FORMATS = ["%d.%m.%Y %H:%M"]
+LOGIN_URL = 'login'

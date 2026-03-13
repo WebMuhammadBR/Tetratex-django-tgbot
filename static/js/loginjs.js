@@ -1,25 +1,16 @@
-$(document).ready(function() {
+document.addEventListener("DOMContentLoaded", () => {
+  const form = document.getElementById("accesspanel");
+  const header = document.getElementById("litheader");
+  const submitButton = document.getElementById("go");
 
-    var state = false;
+  if (!form || !header || !submitButton) {
+    return;
+  }
 
-    //$("input:text:visible:first").focus();
-
-    $('#accesspanel').on('submit', function(e) {
-
-        e.preventDefault();
-
-        state = !state;
-
-        if (state) {
-            document.getElementById("litheader").className = "poweron";
-            document.getElementById("go").className = "";
-            document.getElementById("go").value = "Initializing...";
-        }else{
-            document.getElementById("litheader").className = "";
-            document.getElementById("go").className = "denied";
-            document.getElementById("go").value = "Access Denied";
-        }
-
-    });
-
+  form.addEventListener("submit", () => {
+    header.classList.add("poweron");
+    submitButton.classList.remove("denied");
+    submitButton.value = "Tekshirilmoqda...";
+    submitButton.disabled = true;
+  });
 });
