@@ -2,44 +2,43 @@
 <!DOCTYPE html>
 <html lang="uz">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
   <title>Kirish</title>
-  <link rel="stylesheet" href="{% static 'css/login.css' %}">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/inapp/style.css' %}">
 </head>
-<body>
-  <div class="background-wrap">
-    <div class="background"></div>
-  </div>
-
-  <form id="accesspanel" action="{% url 'login' %}" method="post">
-    {% csrf_token %}
-    <h1 id="litheader">TETRATEX MCHJ</h1>
-    <div class="inset">
+<body class="bg-light">
+<div class="container d-flex align-items-center justify-content-center min-vh-100">
+  <div class="card" style="max-width:420px; width:100%;">
+    <div class="card-body p-5">
+      <div class="text-center mb-3">
+        <img src="{% static 'images/logo-icon.svg' %}" alt="logo" width="36">
+        <h1 class="h5 mt-3">Hisobga kirish</h1>
+      </div>
       {% if messages %}
         {% for message in messages %}
-          <p class="login-message {{ message.tags }}">{{ message }}</p>
+          <div class="alert alert-danger py-2">{{ message }}</div>
         {% endfor %}
       {% endif %}
-      <p>
-        <input type="text" name="username" id="email" placeholder="Foydalanuvchi nomi" required>
-      </p>
-      <p>
-        <input type="password" name="password" id="password" placeholder="Parol" required>
-      </p>
-      <div style="text-align: center;">
-        <div class="checkboxouter">
-          <input type="checkbox" name="rememberme" id="remember">
-          <label class="checkbox" for="remember"></label>
+      <form method="post" action="{% url 'login' %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="username" class="form-label">Foydalanuvchi nomi</label>
+          <input id="username" type="text" name="username" class="form-control" required autofocus>
         </div>
-        <label for="remember">Meni 14 kun eslab qol</label>
-      </div>
+        <div class="mb-3">
+          <label for="password" class="form-label">Parol</label>
+          <input id="password" type="password" name="password" class="form-control" required>
+        </div>
+        <div class="form-check mb-3">
+          <input id="remember" name="rememberme" class="form-check-input" type="checkbox">
+          <label class="form-check-label" for="remember">Meni 14 kun eslab qol</label>
+        </div>
+        <button class="btn btn-primary w-100" type="submit">Kirish</button>
+      </form>
     </div>
-    <p class="p-container">
-      <input type="submit" name="Kirish" id="go" value="Kirish">
-    </p>
-  </form>
-
-  <script src="{% static 'js/loginjs.js' %}"></script>
+  </div>
+</div>
 </body>
 </html>

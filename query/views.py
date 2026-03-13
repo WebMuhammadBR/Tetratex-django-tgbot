@@ -1,13 +1,12 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.http import HttpResponse
 from django.shortcuts import redirect, render
 
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect("farmer_report")
+        return redirect("home")
 
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
@@ -25,14 +24,14 @@ def login_view(request):
         else:
             request.session.set_expiry(0)
 
-        return redirect("farmer_report")
+        return redirect("home")
 
     return render(request, "login/login.html")
 
 
 @login_required
 def home(request):
-    return HttpResponse("Salom Bobur aka 👋")
+    return render(request, "query/dashboard.html")
 
 
 @login_required

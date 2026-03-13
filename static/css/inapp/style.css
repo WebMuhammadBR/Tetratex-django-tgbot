@@ -1,0 +1,16 @@
+body {font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;}
+.sidebar {width: 260px; min-height: 100vh; position: fixed; left: 0; top: 0; background: #fff; border-right: 1px solid #e9ecef; transition: .25s;}
+.sidebar.collapsed {margin-left: -260px;}
+.content {margin-left: 260px; padding-top: 86px; transition: .25s;}
+.content.full {margin-left: 0;}
+.topbar {left:260px; transition:.25s;}
+.topbar.full {left:0;}
+.overlay {position: fixed; inset: 0; background: rgba(0,0,0,.35); opacity:0; visibility:hidden; transition:.2s; z-index:1030;}
+.overlay.show {opacity:1; visibility:visible;}
+.nav-link.active {background:#f8f9fa; color:#e66239 !important; border-radius:.5rem;}
+.avatar {object-fit: cover;}
+@media (max-width: 991.98px){
+  .sidebar {margin-left:-260px; z-index:1040;}
+  .sidebar.mobile-show {margin-left:0;}
+  .content, .topbar {margin-left:0; left:0;}
+}
