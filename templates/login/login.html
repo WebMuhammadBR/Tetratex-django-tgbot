@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
+  <title>Kirish</title>
   <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
@@ -14,7 +14,7 @@
 
   <form id="accesspanel" action="{% url 'login' %}" method="post">
     {% csrf_token %}
-    <h1 id="litheader">AECEND</h1>
+    <h1 id="litheader">TETRATEX MCHJ</h1>
     <div class="inset">
       {% if messages %}
         {% for message in messages %}
@@ -32,11 +32,11 @@
           <input type="checkbox" name="rememberme" id="remember">
           <label class="checkbox" for="remember"></label>
         </div>
-        <label for="remember">Remember me for 14 days</label>
+        <label for="remember">Meni 14 kun eslab qol</label>
       </div>
     </div>
     <p class="p-container">
-      <input type="submit" name="Login" id="go" value="Authorize">
+      <input type="submit" name="Kirish" id="go" value="Kirish">
     </p>
   </form>
 

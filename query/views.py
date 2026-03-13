@@ -16,7 +16,7 @@ def login_view(request):
 
         user = authenticate(request, username=username, password=password)
         if user is None:
-            messages.error(request, "Login yoki parol noto'g'ri.")
+            messages.error(request, "Kirish nomi yoki parol noto'g'ri.")
             return render(request, "login/login.html", status=401)
 
         login(request, user)
