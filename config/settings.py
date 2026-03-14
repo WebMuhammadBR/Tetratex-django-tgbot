@@ -173,3 +173,6 @@ SHORT_DATETIME_FORMAT = "d.m.Y H:i"
 
 DATE_INPUT_FORMATS = ["%d.%m.%Y"]
 DATETIME_INPUT_FORMATS = ["%d.%m.%Y %H:%M"]
+
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
