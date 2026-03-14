@@ -7,22 +7,114 @@
     <link rel="stylesheet" href="/static/query/css/auth.css">
 </head>
 <body class="dashboard-body">
-<header class="topbar">
-    <div>
-        <h1>Dashboard</h1>
-        <p>{{ stats.welcome }}</p>
-    </div>
-    <a href="{% url 'logout' %}" class="logout-btn">Chiqish</a>
-</header>
+<div class="dashboard-shell">
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-dot"></span>
+            <div>
+                <strong>Tetratex</strong>
+                <small>Analytics Hub</small>
+            </div>
+        </div>
 
-<main class="dashboard-grid">
-    {% for card in stats.cards %}
-        <article class="stat-card">
-            <h2>{{ card.title }}</h2>
-            <strong>{{ card.value }}</strong>
-            <span>{{ card.trend }}</span>
-        </article>
-    {% endfor %}
-</main>
+        <nav class="sidebar-nav">
+            <p class="menu-label">Menyu</p>
+            <a href="#" class="active">Dashboard</a>
+            <a href="{% url 'farmer_report' %}">Fermerlar hisoboti</a>
+            <a href="#">Shartnomalar</a>
+            <a href="#">Moliya</a>
+            <a href="#">Sozlamalar</a>
+        </nav>
+
+        <div class="sidebar-foot">
+            <span>Bugun: {{ stats.welcome }}</span>
+        </div>
+    </aside>
+
+    <div class="dashboard-content">
+        <header class="topbar">
+            <div class="topbar-left">
+                <button class="menu-toggle" id="menuToggle" aria-label="Menyuni ochish/yopish">☰</button>
+                <div>
+                    <h1>Haqiqiy statistik dashboard</h1>
+                    <p>{{ stats.welcome }}</p>
+                </div>
+            </div>
+            <a href="{% url 'logout' %}" class="logout-btn">Chiqish</a>
+        </header>
+
+        <section class="highlight-grid">
+            {% for card in stats.cards %}
+                <article class="stat-card colorful-card card-{{ forloop.counter }}">
+                    <h2>{{ card.title }}</h2>
+                    <strong>{{ card.value }}</strong>
+                    <span>{{ card.trend }} o'tgan oyga nisbatan</span>
+                </article>
+            {% endfor %}
+            <article class="stat-card colorful-card card-4">
+                <h2>Jarayondagi murojaatlar</h2>
+                <strong>312</strong>
+                <span>+21% haftalik o'sish</span>
+            </article>
+        </section>
+
+        <section class="panel-grid">
+            <article class="panel wide">
+                <div class="panel-header">
+                    <h3>Haftalik faoliyat dinamikasi</h3>
+                    <small>Real vaqt monitoringi</small>
+                </div>
+                <div class="line-chart" aria-hidden="true">
+                    <span style="--h:45%"></span>
+                    <span style="--h:62%"></span>
+                    <span style="--h:38%"></span>
+                    <span style="--h:70%"></span>
+                    <span style="--h:54%"></span>
+                    <span style="--h:82%"></span>
+                    <span style="--h:60%"></span>
+                </div>
+            </article>
+
+            <article class="panel">
+                <div class="panel-header">
+                    <h3>Bo'limlar kesimida</h3>
+                    <small>Foiz taqsimoti</small>
+                </div>
+                <ul class="progress-list">
+                    <li><span>Shartnomalar</span><strong>71%</strong><div><i style="width:71%"></i></div></li>
+                    <li><span>Hisobotlar</span><strong>54%</strong><div><i style="width:54%"></i></div></li>
+                    <li><span>Tahsilotlar</span><strong>32%</strong><div><i style="width:32%"></i></div></li>
+                    <li><span>To'lovlar</span><strong>89%</strong><div><i style="width:89%"></i></div></li>
+                </ul>
+            </article>
+
+            <article class="panel wide">
+                <div class="panel-header">
+                    <h3>So'nggi aktiv foydalanuvchilar</h3>
+                    <small>Oxirgi 24 soat</small>
+                </div>
+                <table class="mini-table">
+                    <thead>
+                    <tr><th>#</th><th>Ism</th><th>Hudud</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>
+                    <tr><td>01</td><td>Fozil aka</td><td>Jizzax</td><td><b class="tag">Faol</b></td></tr>
+                    <tr><td>02</td><td>Sardorjon</td><td>Sirdaryo</td><td><b class="tag warning">Kutmoqda</b></td></tr>
+                    <tr><td>03</td><td>Muhammadali</td><td>Toshkent</td><td><b class="tag">Faol</b></td></tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+    </div>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById('menuToggle');
+    const body = document.body;
+
+    toggleBtn.addEventListener('click', () => {
+        body.classList.toggle('sidebar-collapsed');
+    });
+</script>
 </body>
 </html>
