@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetratex | Dashboard</title>
+    <link rel="stylesheet" href="/static/query/css/auth.css">
+</head>
+<body class="dashboard-body">
+<header class="topbar">
+    <div>
+        <h1>Dashboard</h1>
+        <p>{{ stats.welcome }}</p>
+    </div>
+    <a href="{% url 'logout' %}" class="logout-btn">Chiqish</a>
+</header>
+
+<main class="dashboard-grid">
+    {% for card in stats.cards %}
+        <article class="stat-card">
+            <h2>{{ card.title }}</h2>
+            <strong>{{ card.value }}</strong>
+            <span>{{ card.trend }}</span>
+        </article>
+    {% endfor %}
+</main>
+</body>
+</html>
