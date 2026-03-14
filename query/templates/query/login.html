@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tetratex | Login</title>
+    <link rel="stylesheet" href="/static/query/css/auth.css">
+</head>
+<body class="auth-body">
+<div class="auth-bg"></div>
+<main class="auth-container">
+    <section class="auth-card">
+        <h1>Tetratex Dashboard</h1>
+        <p>Tizimga kirish uchun login va parolingizni kiriting.</p>
+
+        <form method="post" class="auth-form">
+            {% csrf_token %}
+            <label for="id_username">Login</label>
+            {{ form.username }}
+
+            <label for="id_password">Parol</label>
+            {{ form.password }}
+
+            {% if form.non_field_errors %}
+                <div class="error-box">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <button type="submit">Kirish</button>
+        </form>
+    </section>
+</main>
+</body>
+</html>
