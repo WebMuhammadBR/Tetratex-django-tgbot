@@ -159,8 +159,8 @@ def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int]
     rows = summary.get("rows") or []
     totals = summary.get("totals") or {"warehouse_name": "Жами", "products": []}
 
-    columns = ["№", "Омбор номи"]
-    column_widths = [70, 220]
+    columns = ["№", "Омбор\u00a0номи"]
+    column_widths = [70, 250]
     column_alignments = ["center", "left"]
     header_groups = []
 
@@ -247,9 +247,6 @@ async def warehouse_total_summary_handler(message: Message):
     columns, column_widths, column_alignments, table_rows, header_groups = _warehouse_summary_table_config(summary)
     image_bytes = build_table_image(
         title="🏬 Жами омборлар ҳисоботи",
-        subtitle=f"Сана: {date.today().strftime('%d.%m.%Y')}",
-        subtitle_bold=True,
-        subtitle_color="#0b1f44",
         columns=columns,
         column_widths=column_widths,
         column_alignments=column_alignments,
