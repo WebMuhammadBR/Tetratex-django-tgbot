@@ -358,7 +358,9 @@ def build_table_image(
     cursor_x = x
     if has_grouped_header:
         split_y = y + header_row_h
-        draw.line((x, split_y, x + table_width, split_y), fill=_BORDER, width=1)
+        split_start_x = x + sum(col_widths[:max(0, row_span_columns)])
+        if split_start_x < x + table_width:
+            draw.line((split_start_x, split_y, x + table_width, split_y), fill=_BORDER, width=1)
 
         cumulative_widths = [x]
         for width in col_widths:

@@ -183,9 +183,9 @@ def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int]
             product_totals = products_data.get(int(product["product_id"]), {})
             line.extend(
                 [
-                    _format_number_with_spaces(product_totals.get("total_in", 0), digits=2),
-                    _format_number_with_spaces(product_totals.get("total_out", 0), digits=2),
-                    _format_number_with_spaces(product_totals.get("balance", 0), digits=2),
+                    _format_number_with_spaces(product_totals.get("total_in", 0), digits=0),
+                    _format_number_with_spaces(product_totals.get("total_out", 0), digits=0),
+                    _format_number_with_spaces(product_totals.get("balance", 0), digits=0),
                 ]
             )
         table_rows.append(line)
@@ -200,9 +200,9 @@ def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int]
         product_totals = totals_data.get(int(product["product_id"]), {})
         totals_line.extend(
             [
-                _format_number_with_spaces(product_totals.get("total_in", 0), digits=2),
-                _format_number_with_spaces(product_totals.get("total_out", 0), digits=2),
-                _format_number_with_spaces(product_totals.get("balance", 0), digits=2),
+                _format_number_with_spaces(product_totals.get("total_in", 0), digits=0),
+                _format_number_with_spaces(product_totals.get("total_out", 0), digits=0),
+                _format_number_with_spaces(product_totals.get("balance", 0), digits=0),
             ]
         )
     table_rows.append(totals_line)
