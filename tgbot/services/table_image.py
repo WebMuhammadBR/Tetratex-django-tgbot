@@ -367,7 +367,7 @@ def build_table_image(
             cumulative_widths.append(cumulative_widths[-1] + width)
 
         for idx in range(1, len(columns)):
-            line_top = y if idx < row_span_columns else split_y
+            line_top = y if idx <= row_span_columns else split_y
             draw.line((cumulative_widths[idx], line_top, cumulative_widths[idx], y + table_h), fill=_BORDER, width=1)
 
         group_boundary_idx = row_span_columns
