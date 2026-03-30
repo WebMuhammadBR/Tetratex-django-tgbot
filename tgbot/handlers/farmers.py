@@ -27,6 +27,10 @@ def _to_float(value) -> float:
     return float(value or 0)
 
 
+def _highlight_if_exceeds(value_text: str, current_value: float, limit_value: float) -> tuple[str, str] | str:
+    return (value_text, "#d62828") if current_value > limit_value else value_text
+
+
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
     product_names = sorted(
         {
@@ -56,8 +60,8 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
         required_cotton_qty = total_advance_amount / COTTON_PRICE if COTTON_PRICE else 0
 
         row.append(_format_amount(total_advance_amount))
-        row.append(_format_percent(advance_percent))
-        row.append(_format_amount(required_cotton_qty))
+        row.append(_highlight_if_exceeds(_format_percent(advance_percent), advance_percent, 60))
+        row.append(_highlight_if_exceeds(_format_amount(required_cotton_qty), required_cotton_qty, _to_float(farmer.get("futures_quantity"))))
         rows.append(row)
 
     return product_names, rows
@@ -128,9 +132,9 @@ async def send_page(target, page, district_index, edit):
     column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 220, 240]
     column_alignments = [
         "center",
-        "left",
-        "left",
-        "left",
+        "center",
+        "center",
+        "center",
         "center",
         "center",
         *( ["center"] * len(product_names)),
@@ -160,15 +164,15 @@ async def send_page(target, page, district_index, edit):
             _format_amount(futures_amount_total),
             *totals_by_product,
             _format_amount(grand_total),
-            _format_percent(total_advance_percent),
-            _format_amount(total_required_cotton_qty),
+            _highlight_if_exceeds(_format_percent(total_advance_percent), total_advance_percent, 60),
+            _highlight_if_exceeds(_format_amount(total_required_cotton_qty), total_required_cotton_qty, futures_quantity_total),
         ]
     )
 
     image_bytes = build_table_image(
         title="📋 Фермер Баланс",
         subtitle=f"Туман: {district_title}",
-        top_note=f"Минг сўмда. Авансни қоплаш учун пахта миқдори {COTTON_PRICE} сўмга бўлиниб ҳисобланди",
+        top_note="Минг сўмда",
         top_note_alignment="left",
         top_note_color="#d62828",
         header_groups=[
