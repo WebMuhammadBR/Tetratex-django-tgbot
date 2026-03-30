@@ -136,11 +136,11 @@ async def send_page(target, page, district_index, edit):
         "Шартнома суммаси",
         *product_names,
         "Терим пули",
-        "Жами (аванс + терим пули)",
+        "Жами",
         "Берилган бўнак \nшартноманинг (%) ни ташкил қилади",
         "Бўнакни қоплаш учун лозим бўлган пахта миқдори",
     ]
-    column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 190, 230, 230]
+    column_widths = [80, 160, 160, 360, 140, 180, *([180] * len(product_names)), 170, 190, 230, 230]
     column_alignments = [
         "center",
         "center",
