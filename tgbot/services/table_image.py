@@ -448,12 +448,7 @@ def build_table_image(
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
             widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            if alignments[idx] == "center":
-                text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
-            elif alignments[idx] == "right":
-                text_x = cursor_x + col_widths[idx] - widest_line_w - 16
-            else:
-                text_x = cursor_x + 16
+            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
             text_y = y + (header_h - text_block_h) / 2
             _draw_multiline_text(
                 draw,
@@ -493,12 +488,7 @@ def build_table_image(
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
             widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            if alignments[idx] == "center":
-                text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
-            elif alignments[idx] == "right":
-                text_x = cursor_x + col_widths[idx] - widest_line_w - 16
-            else:
-                text_x = cursor_x + 16
+            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
 
             _draw_multiline_text(
                 draw,
@@ -515,12 +505,7 @@ def build_table_image(
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
             widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            if alignments[idx] == "center":
-                text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
-            elif alignments[idx] == "right":
-                text_x = cursor_x + col_widths[idx] - widest_line_w - 16
-            else:
-                text_x = cursor_x + 16
+            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
 
             _draw_multiline_text(
                 draw,
