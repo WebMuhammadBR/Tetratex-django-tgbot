@@ -63,7 +63,6 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
         advance_percent = (total_for_analysis / futures_amount * 100) if futures_amount > 0 else 0
         required_cotton_qty = total_for_analysis / COTTON_PRICE if COTTON_PRICE else 0
 
-        row.append(_format_amount(total_advance_amount))
         row.append(_format_amount(picking_fee_amount))
         row.append(_format_amount(total_for_analysis))
         row.append(_highlight_if_exceeds(_format_percent(advance_percent), advance_percent, 60))
@@ -131,13 +130,12 @@ async def send_page(target, page, district_index, edit):
         "Шартнома миқдори",
         "Шартнома суммаси",
         *product_names,
-        "Жами",
         "Терим пули",
         "Жами (аванс + терим пули)",
         "Берилган бўнак \nшартноманинг (%) ни ташкил қилади",
         "Бўнакни қоплаш учун лозим бўлган пахта миқдори",
     ]
-    column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 170, 190, 230, 230]
+    column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 190, 230, 230]
     column_alignments = [
         "center",
         "center",
@@ -146,7 +144,6 @@ async def send_page(target, page, district_index, edit):
         "center",
         "center",
         *( ["center"] * len(product_names)),
-        "center",
         "center",
         "center",
         "center",
@@ -175,7 +172,6 @@ async def send_page(target, page, district_index, edit):
             _format_amount(futures_quantity_total),
             _format_amount(futures_amount_total),
             *totals_by_product,
-            _format_amount(grand_total),
             _format_amount(total_picking_fee),
             _format_amount(total_for_analysis),
             _highlight_if_exceeds(_format_percent(total_advance_percent), total_advance_percent, 60),
@@ -190,7 +186,7 @@ async def send_page(target, page, district_index, edit):
         top_note_alignment="left",
         top_note_color="#d62828",
         header_groups=[
-            {"title": "Берилган аванс", "span": len(product_names) + 3},
+            {"title": "Берилган аванс", "span": len(product_names) + 2},
             {"title": "Таҳлил", "span": 2},
         ],
         row_span_columns=6,
