@@ -11,6 +11,7 @@ from services.table_image import build_table_image, send_or_edit_table_image
 router = Router()
 PER_PAGE = 15
 COTTON_PRICE = 7862
+PICKING_RATE = 2000
 
 
 def _format_amount(value) -> str:
@@ -56,12 +57,16 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
 
         total_advance_amount = _to_float(farmer.get("farmer_total_amount"))
         futures_amount = _to_float(farmer.get("futures_amount"))
-        advance_percent = (total_advance_amount / futures_amount * 100) if futures_amount > 0 else 0
-        required_cotton_qty = total_advance_amount / COTTON_PRICE if COTTON_PRICE else 0
+        futures_quantity = _to_float(farmer.get("futures_quantity"))
+        picking_fee_amount = futures_quantity * PICKING_RATE
+        total_for_analysis = total_advance_amount + picking_fee_amount
+        advance_percent = (total_for_analysis / futures_amount * 100) if futures_amount > 0 else 0
+        required_cotton_qty = total_for_analysis / COTTON_PRICE if COTTON_PRICE else 0
 
         row.append(_format_amount(total_advance_amount))
+        row.append(_format_amount(picking_fee_amount))
         row.append(_highlight_if_exceeds(_format_percent(advance_percent), advance_percent, 60))
-        row.append(_highlight_if_exceeds(_format_amount(required_cotton_qty), required_cotton_qty, _to_float(farmer.get("futures_quantity"))))
+        row.append(_highlight_if_exceeds(_format_amount(required_cotton_qty), required_cotton_qty, futures_quantity))
         rows.append(row)
 
     return product_names, rows
@@ -126,10 +131,11 @@ async def send_page(target, page, district_index, edit):
         "Шартнома суммаси",
         *product_names,
         "Жами",
+        "Терим пули",
         "Берилган бўнак \nшартноманинг (%) ни ташкил қилади",
         "Бўнакни қоплаш учун лозим бўлган пахта миқдори",
     ]
-    column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 230, 230]
+    column_widths = [80, 160, 160, 360, 220, 210, *([180] * len(product_names)), 170, 170, 230, 230]
     column_alignments = [
         "center",
         "center",
@@ -141,6 +147,7 @@ async def send_page(target, page, district_index, edit):
         "center",
         "center",
         "center",
+        "center",
     ]
 
     totals_by_product = []
@@ -148,11 +155,13 @@ async def send_page(target, page, district_index, edit):
         total_value = sum(float((item.get("product_totals") or {}).get(product_name) or 0) for item in filtered_data)
         totals_by_product.append(_format_amount(total_value))
 
-    grand_total = sum(_to_float(item.get("farmer_total_amount")) for item in filtered_data)
     futures_quantity_total = sum(_to_float(item.get("futures_quantity")) for item in filtered_data)
     futures_amount_total = sum(_to_float(item.get("futures_amount")) for item in filtered_data)
-    total_advance_percent = (grand_total / futures_amount_total * 100) if futures_amount_total > 0 else 0
-    total_required_cotton_qty = grand_total / COTTON_PRICE if COTTON_PRICE else 0
+    grand_total = sum(_to_float(item.get("farmer_total_amount")) for item in filtered_data)
+    total_picking_fee = futures_quantity_total * PICKING_RATE
+    total_for_analysis = grand_total + total_picking_fee
+    total_advance_percent = (total_for_analysis / futures_amount_total * 100) if futures_amount_total > 0 else 0
+    total_required_cotton_qty = total_for_analysis / COTTON_PRICE if COTTON_PRICE else 0
 
     rows.append(
         [
@@ -164,6 +173,7 @@ async def send_page(target, page, district_index, edit):
             _format_amount(futures_amount_total),
             *totals_by_product,
             _format_amount(grand_total),
+            _format_amount(total_picking_fee),
             _highlight_if_exceeds(_format_percent(total_advance_percent), total_advance_percent, 60),
             _highlight_if_exceeds(_format_amount(total_required_cotton_qty), total_required_cotton_qty, futures_quantity_total),
         ]
@@ -176,7 +186,7 @@ async def send_page(target, page, district_index, edit):
         top_note_alignment="left",
         top_note_color="#d62828",
         header_groups=[
-            {"title": "Берилган аванс", "span": len(product_names) + 1},
+            {"title": "Берилган аванс", "span": len(product_names) + 2},
             {"title": "Таҳлил", "span": 2},
         ],
         row_span_columns=6,
