@@ -12,6 +12,7 @@ router = Router()
 PER_PAGE = 15
 COTTON_PRICE = 7862
 PICKING_RATE = 2000
+FARMER_NAME_MAX_LENGTH = 22
 
 
 def _format_amount(value) -> str:
@@ -32,6 +33,10 @@ def _highlight_if_exceeds(value_text: str, current_value: float, limit_value: fl
     return (value_text, "#d62828") if current_value > limit_value else value_text
 
 
+def _truncate_farmer_name(name: str | None) -> str:
+    return (name or "-")[:FARMER_NAME_MAX_LENGTH]
+
+
 def _rows_with_dynamic_products(data: list[dict], start_index: int):
     product_names = sorted(
         {
@@ -49,7 +54,7 @@ def _rows_with_dynamic_products(data: list[dict], start_index: int):
             str(index),
             farmer.get("district") or "-",
             farmer.get("massive") or "-",
-            farmer.get("name") or "-",
+            _truncate_farmer_name(farmer.get("name")),
             _format_amount(farmer.get("futures_quantity")),
             _format_amount(farmer.get("futures_amount")),
         ]
