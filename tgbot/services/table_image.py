@@ -140,10 +140,25 @@ def _wrap_text_to_width(draw, text: str, font, max_width: int) -> list[str]:
     return wrapped_lines or [str(text)]
 
 
-def _draw_multiline_text(draw, lines: list[str], *, x: float, y: float, font, fill: str, line_gap: int = 4) -> None:
+def _draw_multiline_text(
+    draw,
+    lines: list[str],
+    *,
+    x: float,
+    y: float,
+    font,
+    fill: str,
+    line_gap: int = 4,
+    align: str = "left",
+    box_width: int | None = None,
+) -> None:
     current_y = y
     for line in lines:
-        draw.text((x, current_y), line, font=font, fill=fill)
+        line_x = x
+        if align == "center" and box_width is not None:
+            line_width, _ = _text_size(draw, line, font)
+            line_x = x + (box_width - line_width) / 2
+        draw.text((line_x, current_y), line, font=font, fill=fill)
         current_y += _text_size(draw, line or "Ag", font)[1] + line_gap
 
 
@@ -447,17 +462,17 @@ def build_table_image(
         for idx in range(min(row_span_columns, len(columns))):
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
-            widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
             text_y = y + (header_h - text_block_h) / 2
             _draw_multiline_text(
                 draw,
                 wrapped_lines,
-                x=text_x,
+                x=cursor_x,
                 y=text_y,
                 font=header_font,
                 fill=_HEADER_TEXT,
                 line_gap=header_line_gap,
+                align="center",
+                box_width=col_widths[idx],
             )
             cursor_x += col_widths[idx]
 
@@ -470,15 +485,16 @@ def build_table_image(
             group_width = sum(col_widths[group_start_idx:group_start_idx + span])
             wrapped_title_lines = wrapped_group_titles[group_idx]
             title_block_h = len(wrapped_title_lines) * header_line_h + max(0, len(wrapped_title_lines) - 1) * header_line_gap
-            widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_title_lines)
             _draw_multiline_text(
                 draw,
                 wrapped_title_lines,
-                x=cursor_x + (group_width - widest_line_w) / 2,
+                x=cursor_x,
                 y=y + (header_top_h - title_block_h) / 2,
                 font=header_font,
                 fill=_HEADER_TEXT,
                 line_gap=header_line_gap,
+                align="center",
+                box_width=group_width,
             )
             cursor_x += group_width
             group_start_idx += span
@@ -487,34 +503,34 @@ def build_table_image(
         for idx in range(row_span_columns, len(columns)):
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
-            widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
 
             _draw_multiline_text(
                 draw,
                 wrapped_lines,
-                x=text_x,
+                x=cursor_x,
                 y=y + header_top_h + (header_bottom_h - text_block_h) / 2,
                 font=header_font,
                 fill=_HEADER_TEXT,
                 line_gap=header_line_gap,
+                align="center",
+                box_width=col_widths[idx],
             )
             cursor_x += col_widths[idx]
     else:
-        for idx, col in enumerate(columns):
+        for idx in range(len(columns)):
             wrapped_lines = wrapped_column_headers[idx]
             text_block_h = len(wrapped_lines) * header_line_h + max(0, len(wrapped_lines) - 1) * header_line_gap
-            widest_line_w = max(_text_size(draw, line, header_font)[0] for line in wrapped_lines)
-            text_x = cursor_x + (col_widths[idx] - widest_line_w) / 2
 
             _draw_multiline_text(
                 draw,
                 wrapped_lines,
-                x=text_x,
+                x=cursor_x,
                 y=y + (header_h - text_block_h) / 2,
                 font=header_font,
                 fill=_HEADER_TEXT,
                 line_gap=header_line_gap,
+                align="center",
+                box_width=col_widths[idx],
             )
             if idx > 0:
                 draw.line((cursor_x, y, cursor_x, y + table_h), fill=_BORDER, width=1)
