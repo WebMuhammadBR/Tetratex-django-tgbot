@@ -13,6 +13,9 @@ def _as_percent(value):
     return round(float(value or 0), 2)
 
 
+def _as_thousand_amount(value):
+    return round(float(value or 0) / 1000, 1)
+
 COTTON_PRICE = 7862
 PICKING_RATE = 2000
 
@@ -86,8 +89,9 @@ async def farmers_to_excel(data: list):
         futures_amount = float(farmer.get("futures_amount") or 0)
         picking_fee = futures_quantity * PICKING_RATE
         total_for_analysis = total_advance + picking_fee
-        row["Жами"] = _as_int_amount(total_advance)
-        row["Терим пули"] = _as_int_amount(picking_fee)
+        row["Жами (минг сўм)"] = _as_thousand_amount(total_advance)
+        row["Терим пули (минг сўм)"] = _as_thousand_amount(picking_fee)
+        row["Жами (аванс + терим пули, минг сўм)"] = _as_thousand_amount(total_for_analysis)
         row["Жами аванс шартноманинг % ташкил қилади"] = _as_percent(
             (total_for_analysis / futures_amount * 100) if futures_amount > 0 else 0
         )
@@ -108,8 +112,9 @@ async def farmers_to_excel(data: list):
     grand_total_picking_fee = sum(float(farmer.get("futures_quantity") or 0) for farmer in data) * PICKING_RATE
     grand_total_futures_amount = sum(float(farmer.get("futures_amount") or 0) for farmer in data)
     grand_total_for_analysis = grand_total_advance + grand_total_picking_fee
-    totals_row["Жами"] = _as_int_amount(grand_total_advance)
-    totals_row["Терим пули"] = _as_int_amount(grand_total_picking_fee)
+    totals_row["Жами (минг сўм)"] = _as_thousand_amount(grand_total_advance)
+    totals_row["Терим пули (минг сўм)"] = _as_thousand_amount(grand_total_picking_fee)
+    totals_row["Жами (аванс + терим пули, минг сўм)"] = _as_thousand_amount(grand_total_for_analysis)
     totals_row["Жами аванс шартноманинг % ташкил қилади"] = _as_percent(
         (grand_total_for_analysis / grand_total_futures_amount * 100) if grand_total_futures_amount > 0 else 0
     )
