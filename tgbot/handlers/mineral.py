@@ -1,9 +1,9 @@
 from aiogram import F, Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import BufferedInputFile, CallbackQuery, Message
+from aiogram.types import BufferedInputFile, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, Message
 from datetime import date, datetime
 
-from excel_export import warehouse_expenses_to_excel, warehouse_receipts_to_excel
+from excel_export import warehouse_expenses_to_excel, warehouse_receipts_to_excel, warehouse_summary_to_excel
 from keyboards import (
     warehouse_expense_districts_inline_keyboard,
     warehouse_movement_menu,
@@ -114,20 +114,22 @@ def _report_rows_by_district(items: list[dict]) -> list[dict]:
 
 
 def _aggregate_expense_rows_by_farmer(items: list[dict]) -> list[dict]:
-    grouped: dict[tuple[str, str, str, str], dict] = {}
+    grouped: dict[tuple[str, str, str, str, str], dict] = {}
 
     for item in items:
+        date_text = _format_date_ddmmyyyy(item.get("date"))
         district_name = (item.get("district_name") or "-").strip() or "-"
         massive_name = (item.get("massive_name") or "-").strip() or "-"
         farmer_name = (item.get("farmer_name") or "-").strip() or "-"
         product_name = (item.get("product_name") or "-").strip() or "-"
 
-        key = (district_name, massive_name, farmer_name, product_name)
+        key = (date_text, district_name, massive_name, farmer_name, product_name)
         quantity = float(item.get("quantity") or 0)
 
         row = grouped.setdefault(
             key,
             {
+                "date": date_text,
                 "district_name": district_name,
                 "massive_name": massive_name,
                 "farmer_name": farmer_name,
@@ -143,7 +145,7 @@ def _aggregate_expense_rows_by_farmer(items: list[dict]) -> list[dict]:
 
     return sorted(
         grouped.values(),
-        key=lambda row: (row["district_name"], row["massive_name"], row["farmer_name"], row["product_name"]),
+        key=lambda row: (row["date"], row["district_name"], row["massive_name"], row["farmer_name"], row["product_name"]),
     )
 
 
@@ -181,7 +183,19 @@ async def _send_total_warehouse_summary(message: Message):
         row_span_columns=2,
         min_rows=len(table_rows),
     )
-    await message.answer_photo(photo=BufferedInputFile(image_bytes, filename="warehouse_summary.png"))
+    await message.answer_photo(
+        photo=BufferedInputFile(image_bytes, filename="warehouse_summary.png"),
+        reply_markup=InlineKeyboardMarkup(
+            inline_keyboard=[
+                [
+                    InlineKeyboardButton(
+                        text="📥 Excel",
+                        callback_data="warehouse_export_total_summary",
+                    )
+                ]
+            ]
+        ),
+    )
 
 
 def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int], list[str], list[list[str]], list[dict]]:
@@ -238,6 +252,25 @@ def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int]
     table_rows.append(totals_line)
 
     return columns, column_widths, column_alignments, table_rows, header_groups
+
+
+@router.callback_query(F.data == "warehouse_export_total_summary")
+@access_required
+async def warehouse_export_total_summary_handler(callback: CallbackQuery):
+    summary = await get_warehouse_summary()
+    file_buffer = await warehouse_summary_to_excel(summary)
+    if not file_buffer:
+        await callback.answer("Маълумот топилмади", show_alert=True)
+        return
+
+    await callback.message.answer_document(
+        document=BufferedInputFile(
+            file_buffer.getvalue(),
+            filename="warehouse_total_summary.xlsx",
+        ),
+        caption="📊 Жами омборлар своди (Excel)",
+    )
+    await callback.answer()
 
 
 @router.message(F.text.in_({"🌾 Минерал ўғит", "🏬 Омбор"}))
@@ -544,11 +577,12 @@ async def _send_warehouse_movements_page(
 
     if movement == "in":
         table_title = "📥 Кирим деталлари"
-        columns = ["№", "Юк-хати №", "Маҳсулот", "Транспорт №", "Қоп сони", "Миқдори", "Омбор"]
-        column_widths = [80, 170, 220, 180, 150, 150, 210]
+        columns = ["№", "Сана", "Юк-хати №", "Маҳсулот", "Транспорт №", "Қоп сони", "Миқдори", "Омбор"]
+        column_widths = [70, 130, 150, 180, 150, 120, 130, 170]
         rows = [
             [
                 str(index),
+                _format_date_ddmmyyyy(item.get("date")),
                 str(item.get("invoice_number") or "-"),
                 str(item.get("product_name") or "-"),
                 str(item.get("transport_number") or "-"),
@@ -558,17 +592,18 @@ async def _send_warehouse_movements_page(
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
-        column_alignments = ["center", "center", "left", "center", "center", "center", "left"]
+        column_alignments = ["center", "center", "center", "left", "center", "center", "center", "left"]
     elif movement == "out":
         expense_rows = _aggregate_expense_rows_by_farmer(movements)
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
-        columns = ["№", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори", "Га/кг"]
-        column_widths = [70, 150, 160, 320, 180, 150, 150]
-        column_alignments = ["center", "left", "left", "left", "left", "center", "center"]
+        columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори", "Га/кг"]
+        column_widths = [70, 120, 140, 140, 280, 160, 130, 130]
+        column_alignments = ["center", "center", "left", "left", "left", "left", "center", "center"]
         rows = [
             [
                 str(index),
+                _format_date_ddmmyyyy(item.get("date")),
                 (item.get("district_name") or "-")[:16],
                 (item.get("massive_name") or "-")[:16],
                 (item.get("farmer_name") or "-")[:FARMER_NAME_MAX_LENGTH],

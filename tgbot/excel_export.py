@@ -235,6 +235,7 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
         formatted.append(
             {
                 "№": index,
+                "Сана": _excel_date(item.get("date")),
                 "Туман": item.get("district_name") or "-",
                 "Массив": item.get("massive_name") or "-",
                 "ИНН": item.get("inn") or "-",
@@ -256,6 +257,62 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         df.to_excel(writer, index=False, sheet_name="WarehouseExpenses")
         _autosize_and_bold(writer.sheets["WarehouseExpenses"])
+
+    buffer.seek(0)
+    return buffer
+
+
+async def warehouse_summary_to_excel(summary: dict):
+    products = summary.get("products") or []
+    rows = summary.get("rows") or []
+    totals = summary.get("totals") or {"warehouse_name": "Жами", "products": []}
+
+    if not products or not rows:
+        return None
+
+    formatted = []
+    for row in rows:
+        line = {
+            "№": row.get("order") or "",
+            "Омбор номи": row.get("warehouse_name") or "-",
+        }
+        product_rows = {
+            int(item.get("product_id")): item
+            for item in row.get("products") or []
+            if item.get("product_id")
+        }
+        for product in products:
+            product_id = int(product.get("product_id"))
+            product_name = product.get("product_name") or "Маҳсулот"
+            product_totals = product_rows.get(product_id, {})
+            line[f"{product_name} (Кирим)"] = float(product_totals.get("total_in") or 0)
+            line[f"{product_name} (Чиқим)"] = float(product_totals.get("total_out") or 0)
+            line[f"{product_name} (Қолдиқ)"] = float(product_totals.get("balance") or 0)
+        formatted.append(line)
+
+    totals_line = {
+        "№": "",
+        "Омбор номи": totals.get("warehouse_name") or "Жами",
+    }
+    product_totals_map = {
+        int(item.get("product_id")): item
+        for item in totals.get("products") or []
+        if item.get("product_id")
+    }
+    for product in products:
+        product_id = int(product.get("product_id"))
+        product_name = product.get("product_name") or "Маҳсулот"
+        product_totals = product_totals_map.get(product_id, {})
+        totals_line[f"{product_name} (Кирим)"] = float(product_totals.get("total_in") or 0)
+        totals_line[f"{product_name} (Чиқим)"] = float(product_totals.get("total_out") or 0)
+        totals_line[f"{product_name} (Қолдиқ)"] = float(product_totals.get("balance") or 0)
+    formatted.append(totals_line)
+
+    df = pd.DataFrame(formatted)
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        df.to_excel(writer, index=False, sheet_name="WarehouseSummary")
+        _autosize_and_bold(writer.sheets["WarehouseSummary"])
 
     buffer.seek(0)
     return buffer
