@@ -706,7 +706,7 @@ async def _send_warehouse_movements_page(
         has_next=end < (
             len(report_rows)
             if movement == "report"
-            else (len(expense_rows) if movement == "out" else len(movements))
+            else len(movements)
         ),
         back_callback=back_callback,
     )
