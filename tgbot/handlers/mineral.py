@@ -26,7 +26,7 @@ from services.api_client import (
 router = Router()
 PER_PAGE = 10
 REPORT_PER_PAGE = 6
-FARMER_NAME_MAX_LENGTH = 22
+FARMER_NAME_MAX_LENGTH = 20
 USER_SELECTED_WAREHOUSE: dict[int, int] = {}
 TOTAL_WAREHOUSE_ID = 0
 
