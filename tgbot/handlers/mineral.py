@@ -28,6 +28,7 @@ PER_PAGE = 10
 REPORT_PER_PAGE = 6
 FARMER_NAME_MAX_LENGTH = 22
 USER_SELECTED_WAREHOUSE: dict[int, int] = {}
+TOTAL_WAREHOUSE_ID = 0
 
 WAREHOUSE_RECEIPT_NAMES = {"📥 Кирим", "kirim", "krim", "кирим"}
 WAREHOUSE_EXPENSE_NAMES = {"📤 Чиқим", "chiqim", "чиқим"}
@@ -155,6 +156,34 @@ async def _warehouse_map():
     }
 
 
+def _warehouse_display_name(warehouse_id: int, warehouse_map: dict[int, str]) -> str:
+    if warehouse_id == TOTAL_WAREHOUSE_ID:
+        return "Жами омборлар"
+    return warehouse_map.get(warehouse_id, "Омбор")
+
+
+async def _send_total_warehouse_summary(message: Message):
+    summary = await get_warehouse_summary()
+    products = summary.get("products") or []
+    rows = summary.get("rows") or []
+    if not products or not rows:
+        await message.answer("📊 Жами омбор бўйича маълумот топилмади.")
+        return
+
+    columns, column_widths, column_alignments, table_rows, header_groups = _warehouse_summary_table_config(summary)
+    image_bytes = build_table_image(
+        title="🏬 Жами омборлар ҳисоботи",
+        columns=columns,
+        column_widths=column_widths,
+        column_alignments=column_alignments,
+        rows=table_rows,
+        header_groups=header_groups,
+        row_span_columns=2,
+        min_rows=len(table_rows),
+    )
+    await message.answer_photo(photo=BufferedInputFile(image_bytes, filename="warehouse_summary.png"))
+
+
 def _warehouse_summary_table_config(summary: dict) -> tuple[list[str], list[int], list[str], list[list[str]], list[dict]]:
     products = summary.get("products") or []
     rows = summary.get("rows") or []
@@ -238,25 +267,11 @@ async def back_to_warehouses_handler(message: Message):
 @router.message(F.text == WAREHOUSE_TOTAL_NAME)
 @access_required
 async def warehouse_total_summary_handler(message: Message):
-    summary = await get_warehouse_summary()
-    products = summary.get("products") or []
-    rows = summary.get("rows") or []
-    if not products or not rows:
-        await message.answer("📊 Жами омбор бўйича маълумот топилмади.")
-        return
-
-    columns, column_widths, column_alignments, table_rows, header_groups = _warehouse_summary_table_config(summary)
-    image_bytes = build_table_image(
-        title="🏬 Жами омборлар ҳисоботи",
-        columns=columns,
-        column_widths=column_widths,
-        column_alignments=column_alignments,
-        rows=table_rows,
-        header_groups=header_groups,
-        row_span_columns=2,
-        min_rows=len(table_rows),
+    USER_SELECTED_WAREHOUSE[message.from_user.id] = TOTAL_WAREHOUSE_ID
+    await message.answer(
+        "🏬 Жами омборлар\nКеракли бўлимни танланг:",
+        reply_markup=warehouse_movement_menu(),
     )
-    await message.answer_photo(photo=BufferedInputFile(image_bytes, filename="warehouse_summary.png"))
 
 
 @router.message(F.text.func(lambda value: value and value.lower() in {name.lower() for name in WAREHOUSE_RECEIPT_NAMES}))
@@ -264,11 +279,11 @@ async def warehouse_total_summary_handler(message: Message):
 async def warehouse_receipt_products_handler(message: Message):
     warehouse_map = await _warehouse_map()
     warehouse_id = USER_SELECTED_WAREHOUSE.get(message.from_user.id)
-    if not warehouse_id:
+    if warehouse_id is None:
         await message.answer("Аввал омборни танланг", reply_markup=warehouse_names_menu(list(warehouse_map.values())))
         return
 
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     products = await get_warehouse_products(warehouse_id=warehouse_id, movement="in")
     if not products:
         await message.answer(f"🏬 {warehouse_name}\n\n📥 Кирим бўйича маълумот топилмади.")
@@ -292,11 +307,15 @@ async def warehouse_receipt_products_handler(message: Message):
 async def warehouse_report_districts_handler(message: Message):
     warehouse_map = await _warehouse_map()
     warehouse_id = USER_SELECTED_WAREHOUSE.get(message.from_user.id)
-    if not warehouse_id:
+    if warehouse_id is None:
         await message.answer("Аввал омборни танланг", reply_markup=warehouse_names_menu(list(warehouse_map.values())))
         return
 
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    if warehouse_id == TOTAL_WAREHOUSE_ID:
+        await _send_total_warehouse_summary(message)
+        return
+
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     products = await get_warehouse_products(warehouse_id=warehouse_id, movement="out")
     if not products:
         await message.answer(f"🏬 {warehouse_name}\n\n📊 Свод бўйича маълумот топилмади.")
@@ -318,11 +337,11 @@ async def warehouse_report_districts_handler(message: Message):
 async def warehouse_expense_districts_handler(message: Message):
     warehouse_map = await _warehouse_map()
     warehouse_id = USER_SELECTED_WAREHOUSE.get(message.from_user.id)
-    if not warehouse_id:
+    if warehouse_id is None:
         await message.answer("Аввал омборни танланг", reply_markup=warehouse_names_menu(list(warehouse_map.values())))
         return
 
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     districts = await get_warehouse_expense_districts(warehouse_id=warehouse_id)
     if not districts:
         await message.answer(f"🏬 {warehouse_name}\n\nЧиқим бўйича туманлар топилмади.")
@@ -359,7 +378,7 @@ async def warehouse_back_sections_handler(callback: CallbackQuery):
     _, warehouse_id = callback.data.split(":", maxsplit=1)
     warehouse_id = int(warehouse_id)
     warehouse_map = await _warehouse_map()
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
 
     await _edit_message_content(
         callback.message,
@@ -377,7 +396,7 @@ async def warehouse_expense_district_handler(callback: CallbackQuery):
     district_id = int(district_id)
 
     warehouse_map = await _warehouse_map()
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     movement = "report" if section == "report" else "out"
     await _send_warehouse_products_page(
         message=callback.message,
@@ -396,7 +415,7 @@ async def warehouse_back_to_districts_handler(callback: CallbackQuery):
     warehouse_id = int(parts[1])
     section = parts[2] if len(parts) > 2 else "out"
     warehouse_map = await _warehouse_map()
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     districts = await get_warehouse_expense_districts(warehouse_id=warehouse_id)
 
     if section == "report":
@@ -420,7 +439,7 @@ async def warehouse_back_to_products_handler(callback: CallbackQuery):
     district_id = int(district_id)
 
     warehouse_map = await _warehouse_map()
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
     await _send_warehouse_products_page(
         message=callback.message,
         warehouse_id=warehouse_id,
@@ -492,7 +511,7 @@ async def _send_warehouse_movements_page(
         district_id=None if district_id == 0 else district_id,
     )
     warehouse_map = await _warehouse_map()
-    warehouse_name = warehouse_map.get(warehouse_id, "Омбор")
+    warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
 
     products = await get_warehouse_products(
         warehouse_id=warehouse_id,
