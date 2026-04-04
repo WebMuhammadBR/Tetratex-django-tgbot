@@ -234,7 +234,7 @@ async def warehouse_receipts_to_excel(data: list[dict]):
     return buffer
 
 
-async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
+async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out", include_warehouse_name: bool = False):
     if not data:
         return None
 
@@ -265,24 +265,25 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
             )
             continue
 
-        formatted.append(
-            {
-                "№": index,
-                "Сана": _excel_date(item.get("date")),
-                "Туман": item.get("district_name") or "-",
-                "Массив": item.get("massive_name") or "-",
-                "ИНН": item.get("inn") or "-",
-                "Фермер номи": item.get("farmer_name") or "-",
-                "Юк хати №": item.get("number") or "-",
-                "Маҳсулот": item.get("product_name") or "-",
-                "Нархи": float(item.get("price") or 0),
-                "Миқдори": float(item.get("quantity") or 0),
-                "НДС ставкаси": item.get("vat_rate") or "0",
-                "Суммаси": float(item.get("amount") or 0),
-                "НДС суммаси": float(item.get("vat_amount") or 0),
-                "Жами сумма": float(item.get("total_with_vat") or 0),
-            }
-        )
+        line = {
+            "№": index,
+            "Сана": _excel_date(item.get("date")),
+            "Туман": item.get("district_name") or "-",
+            "Массив": item.get("massive_name") or "-",
+            "ИНН": item.get("inn") or "-",
+            "Фермер номи": item.get("farmer_name") or "-",
+            "Юк хати №": item.get("number") or "-",
+            "Маҳсулот": item.get("product_name") or "-",
+            "Нархи": float(item.get("price") or 0),
+            "Миқдори": float(item.get("quantity") or 0),
+            "НДС ставкаси": item.get("vat_rate") or "0",
+            "Суммаси": float(item.get("amount") or 0),
+            "НДС суммаси": float(item.get("vat_amount") or 0),
+            "Жами сумма": float(item.get("total_with_vat") or 0),
+        }
+        if include_warehouse_name:
+            line["Омбор номи"] = item.get("warehouse_name") or "-"
+        formatted.append(line)
 
     df = pd.DataFrame(formatted)
     buffer = BytesIO()

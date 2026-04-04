@@ -625,20 +625,28 @@ async def _send_warehouse_movements_page(
     elif movement == "out":
         page_items = movements[start:end]
         table_title = "📤 Чиқим деталлари"
+        include_warehouse_name = warehouse_id == TOTAL_WAREHOUSE_ID
         columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Юк-№", "Маҳсулот", "Миқдори"]
         column_widths = [70, 130, 130, 130, 330, 120, 160, 120]
         column_alignments = ["center", "center", "left", "left", "left", "center", "left", "center"]
+        if include_warehouse_name:
+            columns.append("Омбор")
+            column_widths.append(180)
+            column_alignments.append("left")
         rows = [
-            [
-                str(index),
-                _format_date_ddmmyyyy(item.get("date")),
-                (item.get("district_name") or "-")[:16],
-                (item.get("massive_name") or "-")[:16],
-                (item.get("farmer_name") or "-")[:FARMER_NAME_MAX_LENGTH],
-                str(item.get("number") or "-")[:14],
-                (item.get("product_name") or "-")[:16],
-                _format_number_with_spaces(item.get("quantity") or 0),
-            ]
+            (
+                [
+                    str(index),
+                    _format_date_ddmmyyyy(item.get("date")),
+                    (item.get("district_name") or "-")[:16],
+                    (item.get("massive_name") or "-")[:16],
+                    (item.get("farmer_name") or "-")[:FARMER_NAME_MAX_LENGTH],
+                    str(item.get("number") or "-")[:14],
+                    (item.get("product_name") or "-")[:16],
+                    _format_number_with_spaces(item.get("quantity") or 0),
+                ]
+                + ([str(item.get("warehouse_name") or "-")] if include_warehouse_name else [])
+            )
             for index, item in enumerate(page_items, start=start + 1)
         ]
     else:
@@ -779,7 +787,10 @@ async def warehouse_export_filtered_handler(callback: CallbackQuery):
         file_buffer = await warehouse_expenses_to_excel(_report_rows_by_district(data), mode="report")
         filename = "warehouse_report.xlsx"
     else:
-        file_buffer = await warehouse_expenses_to_excel(data)
+        file_buffer = await warehouse_expenses_to_excel(
+            data,
+            include_warehouse_name=int(warehouse_id) == TOTAL_WAREHOUSE_ID,
+        )
         filename = "warehouse_expenses.xlsx"
 
     if not file_buffer:
@@ -818,7 +829,10 @@ async def warehouse_export_handler(callback: CallbackQuery):
         file_buffer = await warehouse_expenses_to_excel(_report_rows_by_district(data), mode="report")
         filename = "warehouse_report.xlsx"
     else:
-        file_buffer = await warehouse_expenses_to_excel(data)
+        file_buffer = await warehouse_expenses_to_excel(
+            data,
+            include_warehouse_name=warehouse_id == TOTAL_WAREHOUSE_ID,
+        )
         filename = "warehouse_expenses.xlsx"
 
     if not file_buffer:
