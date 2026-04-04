@@ -40,6 +40,36 @@ def _excel_date(value):
     return date_text[:10]
 
 
+def _excel_date_sort_key(value):
+    date_text = str(value or "").strip()
+    if not date_text:
+        return datetime.min
+
+    normalized = date_text.replace("Z", "+00:00")
+    try:
+        return datetime.fromisoformat(normalized).replace(tzinfo=None)
+    except ValueError:
+        pass
+
+    for date_format in ("%Y-%m-%d", "%d.%m.%Y"):
+        try:
+            return datetime.strptime(date_text[:10], date_format)
+        except ValueError:
+            continue
+
+    return datetime.min
+
+
+def _excel_date_rank(value):
+    parsed = _excel_date_sort_key(value)
+    return (
+        parsed.toordinal() * 86400
+        + parsed.hour * 3600
+        + parsed.minute * 60
+        + parsed.second
+    )
+
+
 def _autosize_and_bold(worksheet):
     for cell in worksheet[1]:
         cell.font = Font(bold=True)
@@ -176,6 +206,8 @@ async def warehouse_receipts_to_excel(data: list[dict]):
     if not data:
         return None
 
+    data = sorted(data, key=lambda row: _excel_date_sort_key(row.get("date")), reverse=True)
+
     formatted = []
     for index, item in enumerate(data, start=1):
         formatted.append(
@@ -210,6 +242,7 @@ async def warehouse_expenses_to_excel(data: list[dict], mode: str = "out"):
         data = sorted(
             data,
             key=lambda row: (
+                -_excel_date_rank(row.get("date")),
                 row.get("district_name") or "-",
                 row.get("massive_name") or "-",
                 row.get("inn") or "-",

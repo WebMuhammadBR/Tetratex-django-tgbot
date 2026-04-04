@@ -89,6 +89,27 @@ def _date_key(value) -> str:
     return date_text[:10]
 
 
+def _date_sort_key(value):
+    date_text = _date_key(value)
+    if not date_text:
+        return datetime.min
+
+    try:
+        return datetime.strptime(date_text, "%Y-%m-%d")
+    except ValueError:
+        return datetime.min
+
+
+def _date_rank(value) -> int:
+    parsed = _date_sort_key(value)
+    return (
+        parsed.toordinal() * 86400
+        + parsed.hour * 3600
+        + parsed.minute * 60
+        + parsed.second
+    )
+
+
 def _format_number_with_spaces(value, digits: int = 0) -> str:
     formatted = f"{float(value or 0):,.{digits}f}"
     return formatted.replace(",", " ")
@@ -117,18 +138,20 @@ def _aggregate_expense_rows_by_farmer(items: list[dict]) -> list[dict]:
     grouped: dict[tuple[str, str, str, str, str], dict] = {}
 
     for item in items:
+        date_key = _date_key(item.get("date"))
         date_text = _format_date_ddmmyyyy(item.get("date"))
         district_name = (item.get("district_name") or "-").strip() or "-"
         massive_name = (item.get("massive_name") or "-").strip() or "-"
         farmer_name = (item.get("farmer_name") or "-").strip() or "-"
         product_name = (item.get("product_name") or "-").strip() or "-"
 
-        key = (date_text, district_name, massive_name, farmer_name, product_name)
+        key = (date_key, district_name, massive_name, farmer_name, product_name)
         quantity = float(item.get("quantity") or 0)
 
         row = grouped.setdefault(
             key,
             {
+                "date_key": date_key,
                 "date": date_text,
                 "district_name": district_name,
                 "massive_name": massive_name,
@@ -145,7 +168,13 @@ def _aggregate_expense_rows_by_farmer(items: list[dict]) -> list[dict]:
 
     return sorted(
         grouped.values(),
-        key=lambda row: (row["date"], row["district_name"], row["massive_name"], row["farmer_name"], row["product_name"]),
+        key=lambda row: (
+            -_date_rank(row.get("date_key")),
+            row["district_name"],
+            row["massive_name"],
+            row["farmer_name"],
+            row["product_name"],
+        ),
     )
 
 
@@ -543,6 +572,7 @@ async def _send_warehouse_movements_page(
         product_id=product_id,
         district_id=None if district_id == 0 else district_id,
     )
+    movements = sorted(movements, key=lambda item: _date_sort_key(item.get("date")), reverse=True)
     warehouse_map = await _warehouse_map()
     warehouse_name = _warehouse_display_name(warehouse_id, warehouse_map)
 
@@ -597,9 +627,9 @@ async def _send_warehouse_movements_page(
         expense_rows = _aggregate_expense_rows_by_farmer(movements)
         page_items = expense_rows[start:end]
         table_title = "📤 Чиқим деталлари"
-        columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори", "Га/кг"]
-        column_widths = [70, 120, 140, 140, 280, 160, 130, 130]
-        column_alignments = ["center", "center", "left", "left", "left", "left", "center", "center"]
+        columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори"]
+        column_widths = [70, 120, 140, 140, 310, 180, 140]
+        column_alignments = ["center", "center", "left", "left", "left", "left", "center"]
         rows = [
             [
                 str(index),
@@ -609,12 +639,6 @@ async def _send_warehouse_movements_page(
                 (item.get("farmer_name") or "-")[:FARMER_NAME_MAX_LENGTH],
                 (item.get("product_name") or "-")[:16],
                 _format_number_with_spaces(item.get("quantity") or 0),
-                (
-                    _format_number_with_spaces(item.get("quantity_per_area") or 0),
-                    "#d62828",
-                )
-                if float(item.get("quantity_per_area") or 0) > 302
-                else _format_number_with_spaces(item.get("quantity_per_area") or 0),
             ]
             for index, item in enumerate(page_items, start=start + 1)
         ]
