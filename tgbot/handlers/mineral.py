@@ -603,7 +603,6 @@ async def _send_warehouse_movements_page(
 
     footer_lines = None
     report_rows: list[dict] = []
-    expense_rows: list[dict] = []
 
     if movement == "in":
         table_title = "📥 Кирим деталлари"
@@ -624,12 +623,11 @@ async def _send_warehouse_movements_page(
         ]
         column_alignments = ["center", "center", "center", "left", "center", "center", "center", "left"]
     elif movement == "out":
-        expense_rows = _aggregate_expense_rows_by_farmer(movements)
-        page_items = expense_rows[start:end]
+        page_items = movements[start:end]
         table_title = "📤 Чиқим деталлари"
-        columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Маҳсулот", "Миқдори"]
-        column_widths = [70, 120, 140, 140, 310, 180, 140]
-        column_alignments = ["center", "center", "left", "left", "left", "left", "center"]
+        columns = ["№", "Сана", "Туман", "Массив", "Фермер номи", "Юк-№", "Маҳсулот", "Миқдори"]
+        column_widths = [70, 110, 130, 130, 250, 120, 160, 120]
+        column_alignments = ["center", "center", "left", "left", "left", "center", "left", "center"]
         rows = [
             [
                 str(index),
@@ -637,6 +635,7 @@ async def _send_warehouse_movements_page(
                 (item.get("district_name") or "-")[:16],
                 (item.get("massive_name") or "-")[:16],
                 (item.get("farmer_name") or "-")[:FARMER_NAME_MAX_LENGTH],
+                str(item.get("number") or "-")[:14],
                 (item.get("product_name") or "-")[:16],
                 _format_number_with_spaces(item.get("quantity") or 0),
             ]
